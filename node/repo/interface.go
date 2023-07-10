@@ -29,6 +29,8 @@ var (
 	ErrRepoAlreadyLocked = errors.New("repo is already locked (titan daemon already running)")
 	ErrClosedRepo        = errors.New("repo is no longer open")
 
+	ErrNoUUID = errors.New("UUID not set")
+
 	// ErrInvalidBlockstoreDomain is returned by LockedRepo#Blockstore() when
 	// an unrecognized domain is requested.
 	ErrInvalidBlockstoreDomain = errors.New("invalid blockstore domain")
@@ -43,6 +45,9 @@ type Repo interface {
 
 	// PrivateKey returns private key
 	PrivateKey() ([]byte, error)
+
+	// UUID returns uuid
+	UUID() ([]byte, error)
 
 	// Lock locks the repo for exclusive use.
 	Lock(RepoType) (LockedRepo, error)
@@ -80,6 +85,9 @@ type LockedRepo interface {
 
 	// set node private key
 	SetPrivateKey([]byte) error
+
+	// SetUUID sets UUID
+	SetUUID([]byte) error
 
 	// KeyStore returns store of private keys for Filecoin transactions
 	KeyStore() (types.KeyStore, error)

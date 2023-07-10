@@ -13,6 +13,7 @@ import (
 	"github.com/gnasnik/titan-container/node"
 	"github.com/gnasnik/titan-container/node/config"
 	"github.com/gnasnik/titan-container/node/repo"
+	"github.com/google/uuid"
 	logging "github.com/ipfs/go-log/v2"
 	"github.com/mattn/go-isatty"
 	"github.com/urfave/cli/v2"
@@ -203,6 +204,22 @@ var runCmd = &cli.Command{
 			return err
 		}
 
+		providerID, err := r.UUID()
+		if err != nil {
+			if err == repo.ErrNoUUID {
+				providerID, err = uuid.New().MarshalText()
+				if err != nil {
+					return err
+				}
+				err = lr.SetUUID(providerID)
+				if err != nil {
+					return err
+				}
+			} else {
+				return err
+			}
+		}
+
 		providerCfg := cfg.(*config.ProviderCfg)
 
 		err = lr.Close()
@@ -292,7 +309,11 @@ var runCmd = &cli.Command{
 
 					select {
 					case <-readyCh:
-						if err := managerAPI.ProviderConnect(ctx); err != nil {
+						if err := managerAPI.ProviderConnect(ctx, &types.Provider{
+							ID:      types.ProviderID(providerID),
+							Owner:   providerCfg.Owner,
+							HostURI: providerCfg.HostURI,
+						}); err != nil {
 							log.Errorf("Registering provider failed: %+v", err)
 							cancel()
 							return

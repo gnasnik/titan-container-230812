@@ -28,4 +28,6 @@ type ProviderCfg struct {
 	Common
 	// used when 'ListenAddress' is unspecified. must be a valid duration recognized by golang's time.ParseDuration function
 	Timeout string
+	Owner   string
+	HostURI string
 }

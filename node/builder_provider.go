@@ -38,7 +38,6 @@ func ConfigProvider(c interface{}) Option {
 	}
 
 	return Options(
-		Override(new(*config.ProviderCfg), cfg),
 		ConfigCommon(&cfg.Common),
 	)
 }

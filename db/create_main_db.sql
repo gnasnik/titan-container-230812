@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS providers(
+    id VARCHAR(128) NOT NULL UNIQUE,
+    owner VARCHAR(128) NOT NULL,
+    host_uri VARCHAR(128) NOT NULL,
+    ip VARCHAR(128) NOT NULL,
+    created_at DATETIME     DEFAULT NULL,
+    updated_at DATETIME     DEFAULT NULL
+)ENGINE=InnoDB COMMENT='providers';

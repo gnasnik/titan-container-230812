@@ -35,6 +35,7 @@ const (
 	fsLock       = "repo.lock"
 	fsKeystore   = "keystore"
 	fsPrivateKey = "private.key"
+	fsUUID       = "uuid"
 )
 
 func NewRepoTypeFromString(t string) RepoType {
@@ -282,6 +283,25 @@ func (fsr *FsRepo) PrivateKey() ([]byte, error) {
 	return bytes.TrimSpace(tb), nil
 }
 
+func (fsr *FsRepo) UUID() ([]byte, error) {
+	p := filepath.Join(fsr.path, fsUUID)
+	f, err := os.Open(p)
+
+	if os.IsNotExist(err) {
+		return nil, ErrNoUUID
+	} else if err != nil {
+		return nil, err
+	}
+	defer f.Close() //nolint: errcheck // Read only op
+
+	tb, err := ioutil.ReadAll(f)
+	if err != nil {
+		return nil, err
+	}
+
+	return bytes.TrimSpace(tb), nil
+}
+
 // Lock acquires exclusive lock on this repo
 func (fsr *FsRepo) Lock(repoType RepoType) (LockedRepo, error) {
 	locked, err := fslock.Locked(fsr.path, fsLock)
@@ -473,6 +493,13 @@ func (fsr *fsLockedRepo) KeyStore() (types.KeyStore, error) {
 		return nil, err
 	}
 	return fsr, nil
+}
+
+func (fsr *fsLockedRepo) SetUUID(uuid []byte) error {
+	if err := fsr.stillValid(); err != nil {
+		return err
+	}
+	return ioutil.WriteFile(fsr.join(fsUUID), uuid, 0o600)
 }
 
 var kstrPermissionMsg = "permissions of key: '%s' are too relaxed, " +

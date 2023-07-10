@@ -2,11 +2,14 @@ package node
 
 import (
 	"errors"
+	"github.com/gnasnik/titan-container/db"
 	"github.com/gnasnik/titan-container/node/impl/manager"
+	"github.com/gnasnik/titan-container/node/modules"
 
 	"github.com/gnasnik/titan-container/api"
 	"github.com/gnasnik/titan-container/node/config"
 	"github.com/gnasnik/titan-container/node/repo"
+	"github.com/jmoiron/sqlx"
 	"go.uber.org/fx"
 	"golang.org/x/xerrors"
 )
@@ -40,5 +43,7 @@ func ConfigManager(c interface{}) Option {
 	return Options(
 		Override(new(*config.ManagerCfg), cfg),
 		ConfigCommon(&cfg.Common),
+		Override(new(*sqlx.DB), modules.NewManagerDB(cfg.DatabaseAddress)),
+		Override(new(*db.ManagerDB), db.NewManagerDB),
 	)
 }

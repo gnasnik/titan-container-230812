@@ -96,10 +96,10 @@ func Repo(r repo.Repo) Option {
 			Override(new(*common.CommonAPI), common.NewCommonAPI),
 			Override(new(types.KeyStore), modules.KeyStore),
 			Override(new(*dtypes.APIAlg), modules.APISecret),
+
 			Override(new(helpers.MetricsCtx), func() context.Context {
 				return metricsi.CtxScope(context.Background(), "titan")
 			}),
-
 			ApplyIf(IsType(repo.Manager), ConfigManager(c)),
 			ApplyIf(IsType(repo.Provider), ConfigProvider(c)),
 		)(settings)

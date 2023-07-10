@@ -57,7 +57,7 @@ type ManagerStruct struct {
 
 		GetTemplateList func(p0 context.Context) ([]*types.Template, error) `perm:"read"`
 
-		ProviderConnect func(p0 context.Context) error `perm:"admin"`
+		ProviderConnect func(p0 context.Context, p1 *types.Provider) error `perm:"admin"`
 
 		UpdateDeployment func(p0 context.Context, p1 types.ProviderID, p2 *types.Deployment) error `perm:"admin"`
 
@@ -263,14 +263,14 @@ func (s *ManagerStub) GetTemplateList(p0 context.Context) ([]*types.Template, er
 	return *new([]*types.Template), ErrNotSupported
 }
 
-func (s *ManagerStruct) ProviderConnect(p0 context.Context) error {
+func (s *ManagerStruct) ProviderConnect(p0 context.Context, p1 *types.Provider) error {
 	if s.Internal.ProviderConnect == nil {
 		return ErrNotSupported
 	}
-	return s.Internal.ProviderConnect(p0)
+	return s.Internal.ProviderConnect(p0, p1)
 }
 
-func (s *ManagerStub) ProviderConnect(p0 context.Context) error {
+func (s *ManagerStub) ProviderConnect(p0 context.Context, p1 *types.Provider) error {
 	return ErrNotSupported
 }
 

@@ -14,6 +14,8 @@ type APIAlg jwt.HMACSHA
 
 type APIEndpoint multiaddr.Multiaddr
 
+type ProviderID string
+
 // InternalIP local network address
 type InternalIP string
 

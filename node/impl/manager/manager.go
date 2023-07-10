@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/gnasnik/titan-container/api"
 	"github.com/gnasnik/titan-container/api/types"
+	"github.com/gnasnik/titan-container/db"
 	"github.com/gnasnik/titan-container/node/common"
 	"github.com/gnasnik/titan-container/node/handler"
 	logging "github.com/ipfs/go-log/v2"
@@ -17,11 +18,18 @@ type Manager struct {
 	fx.In
 
 	*common.CommonAPI
+	*db.ManagerDB
 }
 
-func (m *Manager) ProviderConnect(ctx context.Context) error {
+func (m *Manager) ProviderConnect(ctx context.Context, provider *types.Provider) error {
 	remoteAddr := handler.GetRemoteAddr(ctx)
-	log.Infof("provider connected address: %s", remoteAddr)
+	log.Infof("provider connected, address: %s, %s", remoteAddr, provider.ID)
+	if provider.IP == "" {
+		provider.IP = remoteAddr
+	}
+	if err := m.AddNewProvider(ctx, provider); err != nil {
+		return err
+	}
 	return nil
 }
 

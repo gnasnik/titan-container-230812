@@ -8,9 +8,9 @@ import (
 )
 
 const (
-	// RetrievalPricingDefault configures the node to use the default retrieval pricing policy.
+	// RetrievalPricingDefaultMode configures the node to use the default retrieval pricing policy.
 	RetrievalPricingDefaultMode = "default"
-	// RetrievalPricingExternal configures the node to use the external retrieval pricing script
+	// RetrievalPricingExternalMode configures the node to use the external retrieval pricing script
 	// configured by the user.
 	RetrievalPricingExternalMode = "external"
 )
@@ -33,6 +33,8 @@ func DefaultProviderCfg() *ProviderCfg {
 				ListenAddress: "0.0.0.0:7123",
 			},
 		},
+		Owner:   "",
+		HostURI: "",
 		Timeout: "30s",
 	}
 }
@@ -46,7 +48,7 @@ func DefaultManagerCfg() *ManagerCfg {
 				RemoteListenAddress: "",
 			},
 		},
-		DatabaseAddress: "mysql_user:mysql_password@tcp(127.0.0.1:3306)/titan",
+		DatabaseAddress: "mysql_user:mysql_password@tcp(127.0.0.1:3306)/titan_container",
 	}
 }
 
