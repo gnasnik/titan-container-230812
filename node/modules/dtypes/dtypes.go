@@ -1,0 +1,31 @@
+package dtypes
+
+import (
+	"github.com/gbrlsnchs/jwt/v3"
+	"github.com/gnasnik/titan-container/node/config"
+	"github.com/ipfs/go-datastore"
+	"github.com/multiformats/go-multiaddr"
+)
+
+// MetadataDS stores metadata.
+type MetadataDS datastore.Batching
+
+type APIAlg jwt.HMACSHA
+
+type APIEndpoint multiaddr.Multiaddr
+
+// InternalIP local network address
+type InternalIP string
+
+type (
+	NodeMetadataPath string
+	AssetsPaths      []string
+)
+
+// SetManagerConfigFunc is a function which is used to
+// sets the manager config.
+type SetManagerConfigFunc func(cfg config.ManagerCfg) error
+
+// GetManagerConfigFunc is a function which is used to
+// get the sealing config.
+type GetManagerConfigFunc func() (config.ManagerCfg, error)
