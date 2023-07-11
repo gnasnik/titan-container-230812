@@ -5,7 +5,6 @@ import (
 	"github.com/filecoin-project/go-jsonrpc/auth"
 	logging "github.com/ipfs/go-log/v2"
 	"net/http"
-	"strings"
 )
 
 var log = logging.Logger("handler")
@@ -36,7 +35,7 @@ func New(handler *auth.Handler) http.Handler {
 
 // ServeHTTP serves an HTTP request with the added client remote address and node ID in the request context
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	remoteAddr := getClientIP(r)
+	remoteAddr := r.Header.Get("X-Remote-Addr")
 	if remoteAddr == "" {
 		remoteAddr = r.RemoteAddr
 	}
@@ -44,17 +43,5 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	ctx = context.WithValue(ctx, RemoteAddr{}, remoteAddr)
 
-	h.handler.Next(w, r.WithContext(ctx))
-}
-
-func getClientIP(req *http.Request) string {
-	clientIP := req.Header.Get("X-Forwarded-For")
-	clientIP = strings.TrimSpace(strings.Split(clientIP, ",")[0])
-	if clientIP == "" {
-		clientIP = strings.TrimSpace(req.Header.Get("X-Real-Ip"))
-	}
-	if clientIP != "" {
-		return clientIP
-	}
-	return ""
+	h.handler.ServeHTTP(w, r.WithContext(ctx))
 }

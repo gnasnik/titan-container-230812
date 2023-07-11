@@ -18,8 +18,9 @@ func NewManagerDB(db *sqlx.DB) *ManagerDB {
 }
 
 func (m *ManagerDB) AddNewProvider(ctx context.Context, provider *types.Provider) error {
-	qry := `INSERT INTO providers (id, owner, host_uri, ip, created_at) 
-		        VALUES (:id, :owner, :host_uri, :ip, :created_at) `
+	qry := `INSERT INTO providers (id, owner, host_uri, ip, created_at, updated_at) 
+		        VALUES (:id, :owner, :host_uri, :ip, :created_at, :updated_at) ON DUPLICATE KEY UPDATE  owner=:owner, host_uri=:host_uri, 
+		            ip=:ip, updated_at=:updated_at`
 	_, err := m.db.NamedExecContext(ctx, qry, provider)
 
 	return err

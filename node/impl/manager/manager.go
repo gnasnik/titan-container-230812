@@ -5,10 +5,13 @@ import (
 	"github.com/gnasnik/titan-container/api"
 	"github.com/gnasnik/titan-container/api/types"
 	"github.com/gnasnik/titan-container/db"
-	"github.com/gnasnik/titan-container/node/common"
 	"github.com/gnasnik/titan-container/node/handler"
+	"github.com/gnasnik/titan-container/node/modules/dtypes"
 	logging "github.com/ipfs/go-log/v2"
+	"github.com/pkg/errors"
 	"go.uber.org/fx"
+	"strings"
+	"time"
 )
 
 var log = logging.Logger("manager")
@@ -17,33 +20,40 @@ var log = logging.Logger("manager")
 type Manager struct {
 	fx.In
 
-	*common.CommonAPI
-	*db.ManagerDB
+	api.Common
+	DB *db.ManagerDB
+
+	ProviderScheduler *ProviderScheduler
+
+	SetManagerConfigFunc dtypes.SetManagerConfigFunc
+	GetManagerConfigFunc dtypes.GetManagerConfigFunc
 }
 
-func (m *Manager) ProviderConnect(ctx context.Context, provider *types.Provider) error {
+func (m *Manager) ProviderConnect(ctx context.Context, url string, provider *types.Provider) error {
 	remoteAddr := handler.GetRemoteAddr(ctx)
-	log.Infof("provider connected, address: %s, %s", remoteAddr, provider.ID)
-	if provider.IP == "" {
-		provider.IP = remoteAddr
+
+	p, err := connectRemoteProvider(ctx, m, url)
+	if err != nil {
+		return errors.Errorf("connecting remote provider failed: %v", err)
 	}
-	if err := m.AddNewProvider(ctx, provider); err != nil {
+
+	log.Infof("Connected to a remote provider at %s", remoteAddr)
+
+	err = m.ProviderScheduler.AddProvider(provider.ID, p)
+	if err != nil {
 		return err
 	}
-	return nil
-}
 
-func (m *Manager) CreateProvider(ctx context.Context, provider *types.Provider) error {
-	//TODO implement me
-	panic("implement me")
+	if provider.IP == "" {
+		provider.IP = strings.Split(remoteAddr, ":")[0]
+	}
+
+	provider.CreatedAt = time.Now()
+	provider.UpdatedAt = time.Now()
+	return m.DB.AddNewProvider(ctx, provider)
 }
 
 func (m *Manager) UpdateProvider(ctx context.Context, provider *types.Provider) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (m *Manager) DeleteProvider(ctx context.Context, provider *types.Provider) error {
 	//TODO implement me
 	panic("implement me")
 }

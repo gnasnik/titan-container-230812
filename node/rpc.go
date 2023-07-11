@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/filecoin-project/go-jsonrpc"
+	mhandler "github.com/gnasnik/titan-container/node/handler"
 	"github.com/gorilla/mux"
 	logging "github.com/ipfs/go-log/v2"
 	"go.opencensus.io/tag"
@@ -63,7 +64,7 @@ func ManagerHandler(a api.Manager, permissioned bool, opts ...jsonrpc.ServerOpti
 
 		var handler http.Handler = rpcServer
 		if permissioned {
-			handler = &auth.Handler{Verify: a.AuthVerify, Next: rpcServer.ServeHTTP}
+			handler = mhandler.New(&auth.Handler{Verify: a.AuthVerify, Next: rpcServer.ServeHTTP})
 		}
 
 		m.Handle(path, handler)
@@ -91,8 +92,8 @@ func ProviderHandler(authv func(ctx context.Context, token string) ([]auth.Permi
 		wapi = api.PermissionedProviderAPI(wapi)
 	}
 
-	rpcServer.Register("Filecoin", wapi)
-	rpcServer.AliasMethod("rpc.discover", "Filecoin.Discover")
+	rpcServer.Register("titan", wapi)
+	rpcServer.AliasMethod("rpc.discover", "titan.Discover")
 
 	mux.Handle("/rpc/v0", rpcServer)
 	mux.Handle("/rpc/streams/v0/push/{uuid}", readerHandler)
@@ -106,5 +107,6 @@ func ProviderHandler(authv func(ctx context.Context, token string) ([]auth.Permi
 		Verify: authv,
 		Next:   mux.ServeHTTP,
 	}
-	return ah
+
+	return mhandler.New(ah)
 }

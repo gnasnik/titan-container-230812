@@ -10,7 +10,7 @@ import (
 	"github.com/gnasnik/titan-container/build"
 	"github.com/gnasnik/titan-container/journal/alerting"
 	"github.com/gnasnik/titan-container/node/modules/dtypes"
-	"github.com/gnasnik/titan-container/node/repo"
+	"go.uber.org/fx"
 
 	"github.com/google/uuid"
 	logging "github.com/ipfs/go-log/v2"
@@ -21,24 +21,17 @@ var session = uuid.New()
 
 // CommonAPI api o
 type CommonAPI struct {
+	fx.In
+
 	Alerting     *alerting.Alerting
 	APISecret    *dtypes.APIAlg
-	ShutdownChan chan struct{}
+	ShutdownChan dtypes.ShutdownChan
 }
 
 // MethodGroup: Auth
 
 type jwtPayload struct {
 	Allow []auth.Permission
-}
-
-// NewCommonAPI initializes a new CommonAPI
-func NewCommonAPI(lr repo.LockedRepo, secret *dtypes.APIAlg) (CommonAPI, error) {
-	commAPI := CommonAPI{
-		APISecret: secret,
-	}
-
-	return commAPI, nil
 }
 
 // AuthVerify verifies a JWT token and returns the permissions associated with it

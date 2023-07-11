@@ -5,6 +5,7 @@ import (
 	"github.com/gnasnik/titan-container/db"
 	"github.com/gnasnik/titan-container/node/impl/manager"
 	"github.com/gnasnik/titan-container/node/modules"
+	"github.com/gnasnik/titan-container/node/modules/dtypes"
 
 	"github.com/gnasnik/titan-container/api"
 	"github.com/gnasnik/titan-container/node/config"
@@ -45,5 +46,8 @@ func ConfigManager(c interface{}) Option {
 		ConfigCommon(&cfg.Common),
 		Override(new(*sqlx.DB), modules.NewManagerDB(cfg.DatabaseAddress)),
 		Override(new(*db.ManagerDB), db.NewManagerDB),
+		Override(new(*manager.ProviderScheduler), manager.NewProviderScheduler),
+		Override(new(dtypes.SetManagerConfigFunc), modules.NewSetManagerConfigFunc),
+		Override(new(dtypes.GetManagerConfigFunc), modules.NewGetManagerConfigFunc),
 	)
 }

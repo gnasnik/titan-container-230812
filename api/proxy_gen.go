@@ -49,15 +49,11 @@ type ManagerStruct struct {
 
 		CreateDeployment func(p0 context.Context, p1 types.ProviderID, p2 *types.Deployment) error `perm:"admin"`
 
-		CreateProvider func(p0 context.Context, p1 *types.Provider) error `perm:"admin"`
-
-		DeleteProvider func(p0 context.Context, p1 *types.Provider) error `perm:"admin"`
-
 		GetProviderList func(p0 context.Context) ([]*types.Provider, error) `perm:"read"`
 
 		GetTemplateList func(p0 context.Context) ([]*types.Template, error) `perm:"read"`
 
-		ProviderConnect func(p0 context.Context, p1 *types.Provider) error `perm:"admin"`
+		ProviderConnect func(p0 context.Context, p1 string, p2 *types.Provider) error `perm:"admin"`
 
 		UpdateDeployment func(p0 context.Context, p1 types.ProviderID, p2 *types.Deployment) error `perm:"admin"`
 
@@ -70,8 +66,6 @@ type ManagerStub struct {
 }
 
 type ProviderStruct struct {
-	CommonStruct
-
 	Internal struct {
 		CloseDeployment func(p0 context.Context, p1 *types.Deployment) error `perm:"admin"`
 
@@ -80,11 +74,12 @@ type ProviderStruct struct {
 		GetStatistics func(p0 context.Context, p1 types.ProviderID) (*types.ResourcesStatistics, error) `perm:"read"`
 
 		UpdateDeployment func(p0 context.Context, p1 *types.Deployment) error `perm:"admin"`
+
+		Version func(p0 context.Context) (Version, error) `perm:"admin"`
 	}
 }
 
 type ProviderStub struct {
-	CommonStub
 }
 
 func (s *CommonStruct) AuthNew(p0 context.Context, p1 []auth.Permission) ([]byte, error) {
@@ -219,28 +214,6 @@ func (s *ManagerStub) CreateDeployment(p0 context.Context, p1 types.ProviderID, 
 	return ErrNotSupported
 }
 
-func (s *ManagerStruct) CreateProvider(p0 context.Context, p1 *types.Provider) error {
-	if s.Internal.CreateProvider == nil {
-		return ErrNotSupported
-	}
-	return s.Internal.CreateProvider(p0, p1)
-}
-
-func (s *ManagerStub) CreateProvider(p0 context.Context, p1 *types.Provider) error {
-	return ErrNotSupported
-}
-
-func (s *ManagerStruct) DeleteProvider(p0 context.Context, p1 *types.Provider) error {
-	if s.Internal.DeleteProvider == nil {
-		return ErrNotSupported
-	}
-	return s.Internal.DeleteProvider(p0, p1)
-}
-
-func (s *ManagerStub) DeleteProvider(p0 context.Context, p1 *types.Provider) error {
-	return ErrNotSupported
-}
-
 func (s *ManagerStruct) GetProviderList(p0 context.Context) ([]*types.Provider, error) {
 	if s.Internal.GetProviderList == nil {
 		return *new([]*types.Provider), ErrNotSupported
@@ -263,14 +236,14 @@ func (s *ManagerStub) GetTemplateList(p0 context.Context) ([]*types.Template, er
 	return *new([]*types.Template), ErrNotSupported
 }
 
-func (s *ManagerStruct) ProviderConnect(p0 context.Context, p1 *types.Provider) error {
+func (s *ManagerStruct) ProviderConnect(p0 context.Context, p1 string, p2 *types.Provider) error {
 	if s.Internal.ProviderConnect == nil {
 		return ErrNotSupported
 	}
-	return s.Internal.ProviderConnect(p0, p1)
+	return s.Internal.ProviderConnect(p0, p1, p2)
 }
 
-func (s *ManagerStub) ProviderConnect(p0 context.Context, p1 *types.Provider) error {
+func (s *ManagerStub) ProviderConnect(p0 context.Context, p1 string, p2 *types.Provider) error {
 	return ErrNotSupported
 }
 
@@ -338,6 +311,17 @@ func (s *ProviderStruct) UpdateDeployment(p0 context.Context, p1 *types.Deployme
 
 func (s *ProviderStub) UpdateDeployment(p0 context.Context, p1 *types.Deployment) error {
 	return ErrNotSupported
+}
+
+func (s *ProviderStruct) Version(p0 context.Context) (Version, error) {
+	if s.Internal.Version == nil {
+		return *new(Version), ErrNotSupported
+	}
+	return s.Internal.Version(p0)
+}
+
+func (s *ProviderStub) Version(p0 context.Context) (Version, error) {
+	return *new(Version), ErrNotSupported
 }
 
 var _ Common = new(CommonStruct)

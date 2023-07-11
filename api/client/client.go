@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"time"
 
 	"github.com/gnasnik/titan-container/api"
 
@@ -56,10 +57,12 @@ func NewProvider(ctx context.Context, addr string, requestHeader http.Header, op
 
 	var res api.ProviderStruct
 	closer, err := jsonrpc.NewMergeClient(ctx, addr, "titan",
-		api.GetInternalStructs(&res), requestHeader,
-		append([]jsonrpc.Option{
-			rpcenc.ReaderParamEncoder(pushURL),
-		}, opts...)...)
+		api.GetInternalStructs(&res),
+		requestHeader,
+		rpcenc.ReaderParamEncoder(pushURL),
+		jsonrpc.WithTimeout(30*time.Second),
+		jsonrpc.WithErrors(api.RPCErrors),
+	)
 
 	return &res, closer, err
 }
@@ -68,7 +71,8 @@ func NewProvider(ctx context.Context, addr string, requestHeader http.Header, op
 func NewCommonRPCV0(ctx context.Context, addr string, requestHeader http.Header) (api.Common, jsonrpc.ClientCloser, error) {
 	var res api.CommonStruct
 	closer, err := jsonrpc.NewMergeClient(ctx, addr, "titan",
-		api.GetInternalStructs(&res), requestHeader)
+		api.GetInternalStructs(&res),
+		requestHeader)
 
 	return &res, closer, err
 }

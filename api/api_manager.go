@@ -11,11 +11,8 @@ type Manager interface {
 	Common
 
 	// ProviderConnect provider registration
-	ProviderConnect(ctx context.Context, provider *types.Provider) error //perm:admin
-
-	CreateProvider(ctx context.Context, provider *types.Provider) error //perm:admin
-	UpdateProvider(ctx context.Context, provider *types.Provider) error //perm:admin
-	DeleteProvider(ctx context.Context, provider *types.Provider) error //perm:admin
+	ProviderConnect(ctx context.Context, url string, provider *types.Provider) error //perm:admin
+	UpdateProvider(ctx context.Context, provider *types.Provider) error              //perm:admin
 
 	GetProviderList(ctx context.Context) ([]*types.Provider, error) //perm:read
 	GetTemplateList(ctx context.Context) ([]*types.Template, error) //perm:read

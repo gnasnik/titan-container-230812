@@ -3,6 +3,7 @@ package node
 import (
 	"context"
 	"errors"
+	"github.com/gnasnik/titan-container/api"
 	"github.com/gnasnik/titan-container/journal"
 	"github.com/gnasnik/titan-container/journal/alerting"
 	"github.com/gnasnik/titan-container/node/common"
@@ -33,8 +34,6 @@ const (
 	ExtractAPIKey
 
 	CheckFDLimit
-
-	SetApiEndpointKey
 
 	_nInvokes // keep this last
 )
@@ -70,12 +69,6 @@ func defaults() []Option {
 func ConfigCommon(cfg *config.Common) Option {
 	return Options(
 		func(s *Settings) error { s.Config = true; return nil },
-		//Override(new(dtypes.APIEndpoint), func() (dtypes.APIEndpoint, error) {
-		//	return multiaddr.NewMultiaddr(cfg.API.ListenAddress)
-		//}),
-		//Override(SetApiEndpointKey, func(lr repo.LockedRepo, e dtypes.APIEndpoint) error {
-		//	return lr.SetAPIEndpoint(e)
-		//}),
 		ApplyIf(func(s *Settings) bool { return s.Base }), // apply only if Base has already been applied
 	)
 }
@@ -93,7 +86,9 @@ func Repo(r repo.Repo) Option {
 		return Options(
 			Override(CheckFDLimit, modules.CheckFdLimit),
 			Override(new(repo.LockedRepo), modules.LockedRepo(lr)), // module handles closing
-			Override(new(*common.CommonAPI), common.NewCommonAPI),
+			Override(new(api.Common), From(new(common.CommonAPI))),
+			Override(new(journal.Journal), modules.OpenFilesystemJournal),
+			Override(new(dtypes.ShutdownChan), make(chan struct{})),
 			Override(new(types.KeyStore), modules.KeyStore),
 			Override(new(*dtypes.APIAlg), modules.APISecret),
 

@@ -247,7 +247,7 @@ var runCmd = &cli.Command{
 		}
 
 		srv := &http.Server{
-			Handler:           node.ProviderHandler(providerAPI.AuthVerify, providerAPI, true),
+			Handler:           node.ProviderHandler(managerAPI.AuthVerify, providerAPI, true),
 			ReadHeaderTimeout: timeout,
 			BaseContext: func(listener net.Listener) context.Context {
 				ctx, _ := tag.New(context.Background(), tag.Upsert(metrics.APIInterface, "provider"))
@@ -309,11 +309,12 @@ var runCmd = &cli.Command{
 
 					select {
 					case <-readyCh:
-						if err := managerAPI.ProviderConnect(ctx, &types.Provider{
-							ID:      types.ProviderID(providerID),
-							Owner:   providerCfg.Owner,
-							HostURI: providerCfg.HostURI,
-						}); err != nil {
+						if err := managerAPI.ProviderConnect(ctx, "http://"+address+"/rpc/v0",
+							&types.Provider{
+								ID:      types.ProviderID(providerID),
+								Owner:   providerCfg.Owner,
+								HostURI: providerCfg.HostURI,
+							}); err != nil {
 							log.Errorf("Registering provider failed: %+v", err)
 							cancel()
 							return

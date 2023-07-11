@@ -192,8 +192,8 @@ func GetProviderAPI(ctx *cli.Context) (api.Provider, jsonrpc.ClientCloser, error
 		return nil, nil, err
 	}
 
-	if !v.APIVersion.EqMajorMinor(api.ProviderAPIVersion0) {
-		return nil, nil, xerrors.Errorf("Remote API version didn't match (expected %s, remote %s)", api.ProviderAPIVersion0, v.APIVersion)
+	if !v.EqMajorMinor(api.ProviderAPIVersion0) {
+		return nil, nil, xerrors.Errorf("Remote API version didn't match (expected %s, remote %s)", api.ProviderAPIVersion0, v)
 	}
 
 	return a, c, e
