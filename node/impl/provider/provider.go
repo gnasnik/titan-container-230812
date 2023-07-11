@@ -4,15 +4,19 @@ import (
 	"context"
 	"github.com/gnasnik/titan-container/api"
 	"github.com/gnasnik/titan-container/api/types"
+	"github.com/google/uuid"
 	"go.uber.org/fx"
 )
+
+var session = uuid.New()
 
 // Provider represents a provider service in a cloud computing system.
 type Provider struct {
 	fx.In
+}
 
-	api.Common
-	ManagerAPI api.Manager
+func (p *Provider) Session(ctx context.Context) (uuid.UUID, error) {
+	return session, nil
 }
 
 func (p *Provider) Version(context.Context) (api.Version, error) {

@@ -73,6 +73,8 @@ type ProviderStruct struct {
 
 		GetStatistics func(p0 context.Context, p1 types.ProviderID) (*types.ResourcesStatistics, error) `perm:"read"`
 
+		Session func(p0 context.Context) (uuid.UUID, error) `perm:"admin"`
+
 		UpdateDeployment func(p0 context.Context, p1 *types.Deployment) error `perm:"admin"`
 
 		Version func(p0 context.Context) (Version, error) `perm:"admin"`
@@ -300,6 +302,17 @@ func (s *ProviderStruct) GetStatistics(p0 context.Context, p1 types.ProviderID) 
 
 func (s *ProviderStub) GetStatistics(p0 context.Context, p1 types.ProviderID) (*types.ResourcesStatistics, error) {
 	return nil, ErrNotSupported
+}
+
+func (s *ProviderStruct) Session(p0 context.Context) (uuid.UUID, error) {
+	if s.Internal.Session == nil {
+		return *new(uuid.UUID), ErrNotSupported
+	}
+	return s.Internal.Session(p0)
+}
+
+func (s *ProviderStub) Session(p0 context.Context) (uuid.UUID, error) {
+	return *new(uuid.UUID), ErrNotSupported
 }
 
 func (s *ProviderStruct) UpdateDeployment(p0 context.Context, p1 *types.Deployment) error {

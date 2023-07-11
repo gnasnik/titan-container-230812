@@ -27,7 +27,7 @@ func connectRemoteProvider(ctx context.Context, fa api.Common, url string) (*rem
 	if err != nil {
 		return nil, xerrors.Errorf("creating jsonrpc client: %w", err)
 	}
-	
+
 	ver, err := papi.Version(ctx)
 	if err != nil {
 		closer()
@@ -40,3 +40,10 @@ func connectRemoteProvider(ctx context.Context, fa api.Common, url string) (*rem
 
 	return &remoteProvider{papi, closer}, nil
 }
+
+func (r *remoteProvider) Close() error {
+	r.closer()
+	return nil
+}
+
+var _ api.Provider = &remoteProvider{}
