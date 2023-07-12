@@ -2,8 +2,11 @@ package provider
 
 import (
 	"context"
+
 	"github.com/gnasnik/titan-container/api"
 	"github.com/gnasnik/titan-container/api/types"
+	"github.com/gnasnik/titan-container/node/common"
+	"github.com/gnasnik/titan-container/provider"
 	"github.com/google/uuid"
 	"go.uber.org/fx"
 )
@@ -13,6 +16,10 @@ var session = uuid.New()
 // Provider represents a provider service in a cloud computing system.
 type Provider struct {
 	fx.In
+
+	*common.CommonAPI
+	ManagerAPI  api.Manager
+	ProviderMgr provider.Manager
 }
 
 func (p *Provider) Session(ctx context.Context) (uuid.UUID, error) {
@@ -24,23 +31,19 @@ func (p *Provider) Version(context.Context) (api.Version, error) {
 }
 
 func (p *Provider) GetStatistics(ctx context.Context, id types.ProviderID) (*types.ResourcesStatistics, error) {
-	//TODO implement me
-	panic("implement me")
+	return p.ProviderMgr.GetStatistics(ctx, id)
 }
 
 func (p *Provider) CreateDeployment(ctx context.Context, deployment *types.Deployment) error {
-	//TODO implement me
-	panic("implement me")
+	return p.ProviderMgr.CreateDeployment(ctx, deployment)
 }
 
 func (p *Provider) UpdateDeployment(ctx context.Context, deployment *types.Deployment) error {
-	//TODO implement me
-	panic("implement me")
+	return p.ProviderMgr.UpdateDeployment(ctx, deployment)
 }
 
 func (p *Provider) CloseDeployment(ctx context.Context, deployment *types.Deployment) error {
-	//TODO implement me
-	panic("implement me")
+	return p.ProviderMgr.CloseDeployment(ctx, deployment)
 }
 
 var _ api.Provider = &Provider{}

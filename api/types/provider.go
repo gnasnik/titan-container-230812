@@ -14,9 +14,9 @@ type Provider struct {
 }
 
 type ResourcesStatistics struct {
-	Memory
-	CPUCores
-	Storage
+	Memory   Memory
+	CPUCores CPUCores
+	Storage  Storage
 }
 
 type Memory struct {

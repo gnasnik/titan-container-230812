@@ -2,14 +2,15 @@ package node
 
 import (
 	"context"
+	"net"
+	"net/http"
+	"time"
+
 	"github.com/filecoin-project/go-jsonrpc/auth"
 	"github.com/gnasnik/titan-container/api"
 	"github.com/gnasnik/titan-container/lib/rpcenc"
 	"github.com/gnasnik/titan-container/metrics"
 	"github.com/gnasnik/titan-container/metrics/proxy"
-	"net"
-	"net/http"
-	"time"
 
 	"github.com/filecoin-project/go-jsonrpc"
 	mhandler "github.com/gnasnik/titan-container/node/handler"

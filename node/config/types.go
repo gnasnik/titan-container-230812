@@ -30,4 +30,6 @@ type ProviderCfg struct {
 	Timeout string
 	Owner   string
 	HostURI string
+
+	KubeConfigPath string
 }
