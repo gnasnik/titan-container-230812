@@ -7,7 +7,6 @@ import (
 	"github.com/gnasnik/titan-container/node/config"
 	"github.com/gnasnik/titan-container/node/impl/provider"
 	"github.com/gnasnik/titan-container/node/repo"
-	titanprovider "github.com/gnasnik/titan-container/provider"
 	"go.uber.org/fx"
 
 	"golang.org/x/xerrors"
@@ -42,6 +41,6 @@ func ConfigProvider(c interface{}) Option {
 	return Options(
 		ConfigCommon(&cfg.Common),
 		Override(new(*config.ProviderCfg), cfg),
-		Override(new(titanprovider.Manager), titanprovider.NewManager),
+		Override(new(provider.Manager), provider.NewManager),
 	)
 }

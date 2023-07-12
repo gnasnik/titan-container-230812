@@ -2,6 +2,9 @@ package manager
 
 import (
 	"context"
+	"strings"
+	"time"
+
 	"github.com/gnasnik/titan-container/api"
 	"github.com/gnasnik/titan-container/api/types"
 	"github.com/gnasnik/titan-container/db"
@@ -10,8 +13,6 @@ import (
 	logging "github.com/ipfs/go-log/v2"
 	"github.com/pkg/errors"
 	"go.uber.org/fx"
-	"strings"
-	"time"
 )
 
 var log = logging.Logger("manager")
@@ -37,7 +38,7 @@ func (m *Manager) ProviderConnect(ctx context.Context, url string, provider *typ
 		return errors.Errorf("connecting remote provider failed: %v", err)
 	}
 
-	log.Infof("Connected to a remote provider at %s", remoteAddr)
+	log.Infof("Connected to a remote provider at %s, provider id %s", remoteAddr, provider.ID)
 
 	err = m.ProviderScheduler.AddProvider(provider.ID, p)
 	if err != nil {

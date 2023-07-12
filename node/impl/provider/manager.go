@@ -7,8 +7,8 @@ import (
 
 	"github.com/gnasnik/titan-container/api/types"
 	"github.com/gnasnik/titan-container/node/config"
-	"github.com/gnasnik/titan-container/provider/kube"
-	"github.com/gnasnik/titan-container/provider/kube/builder"
+	"github.com/gnasnik/titan-container/node/impl/provider/kube"
+	"github.com/gnasnik/titan-container/node/impl/provider/kube/builder"
 	logging "github.com/ipfs/go-log/v2"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -67,6 +67,12 @@ func (m *manager) GetStatistics(ctx context.Context) (*types.ResourcesStatistics
 }
 
 func (m *manager) CreateDeployment(ctx context.Context, deployment *types.Deployment) error {
+	buf, _ := json.Marshal(deployment)
+	fmt.Printf("deployment:%#v\n", string(buf))
+	// for _, service := range deployment.Services {
+	// 	fmt.Printf("service:%#v\n", *service)
+	// }
+
 	k8sDeployment := ClusterDeploymentFromDeployment(deployment)
 	if k8sDeployment.ManifestGroup() == nil || len(k8sDeployment.ManifestGroup().Services) == 0 {
 		return fmt.Errorf("deployment service can not empty")

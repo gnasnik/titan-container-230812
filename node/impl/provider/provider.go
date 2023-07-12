@@ -5,7 +5,6 @@ import (
 
 	"github.com/gnasnik/titan-container/api"
 	"github.com/gnasnik/titan-container/api/types"
-	"github.com/gnasnik/titan-container/provider"
 	"github.com/google/uuid"
 	"go.uber.org/fx"
 )
@@ -16,7 +15,7 @@ var session = uuid.New()
 type Provider struct {
 	fx.In
 
-	ProviderMgr provider.Manager
+	Manager Manager
 }
 
 func (p *Provider) Session(ctx context.Context) (uuid.UUID, error) {
@@ -28,7 +27,7 @@ func (p *Provider) Version(context.Context) (api.Version, error) {
 }
 
 func (p *Provider) GetStatistics(ctx context.Context) (*types.ResourcesStatistics, error) {
-	return p.ProviderMgr.GetStatistics(ctx)
+	return p.Manager.GetStatistics(ctx)
 }
 
 func (p *Provider) GetDeployment(ctx context.Context, id types.DeploymentID) (*types.Deployment, error) {
@@ -37,15 +36,15 @@ func (p *Provider) GetDeployment(ctx context.Context, id types.DeploymentID) (*t
 }
 
 func (p *Provider) CreateDeployment(ctx context.Context, deployment *types.Deployment) error {
-	return p.ProviderMgr.CreateDeployment(ctx, deployment)
+	return p.Manager.CreateDeployment(ctx, deployment)
 }
 
 func (p *Provider) UpdateDeployment(ctx context.Context, deployment *types.Deployment) error {
-	return p.ProviderMgr.UpdateDeployment(ctx, deployment)
+	return p.Manager.UpdateDeployment(ctx, deployment)
 }
 
 func (p *Provider) CloseDeployment(ctx context.Context, deployment *types.Deployment) error {
-	return p.ProviderMgr.CloseDeployment(ctx, deployment)
+	return p.Manager.CloseDeployment(ctx, deployment)
 }
 
 var _ api.Provider = &Provider{}

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gnasnik/titan-container/provider/kube/builder"
+	"github.com/gnasnik/titan-container/node/impl/provider/kube/builder"
 	logging "github.com/ipfs/go-log/v2"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

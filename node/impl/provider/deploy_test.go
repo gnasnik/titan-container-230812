@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/gnasnik/titan-container/api/types"
-	"github.com/gnasnik/titan-container/provider/kube"
-	"github.com/gnasnik/titan-container/provider/kube/builder"
-	"github.com/gnasnik/titan-container/provider/kube/manifest"
+	"github.com/gnasnik/titan-container/node/impl/provider/kube"
+	"github.com/gnasnik/titan-container/node/impl/provider/kube/builder"
+	"github.com/gnasnik/titan-container/node/impl/provider/kube/manifest"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
@@ -22,7 +22,7 @@ func TestDeploy(t *testing.T) {
 	deploy := types.Deployment{
 		ID:       types.DeploymentID("123"),
 		Owner:    "test",
-		Services: []types.Service{service},
+		Services: []*types.Service{&service},
 	}
 
 	k8sDeploy := ClusterDeploymentFromDeployment(&deploy)
@@ -41,7 +41,7 @@ func TestDeleteDeploy(t *testing.T) {
 	deploy := types.Deployment{
 		ID:       types.DeploymentID("123"),
 		Owner:    "test",
-		Services: []types.Service{service},
+		Services: []*types.Service{&service},
 	}
 
 	k8sDeploy := ClusterDeploymentFromDeployment(&deploy)

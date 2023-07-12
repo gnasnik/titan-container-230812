@@ -4,8 +4,8 @@ import (
 	"strings"
 
 	"github.com/gnasnik/titan-container/api/types"
-	"github.com/gnasnik/titan-container/provider/kube/builder"
-	"github.com/gnasnik/titan-container/provider/kube/manifest"
+	"github.com/gnasnik/titan-container/node/impl/provider/kube/builder"
+	"github.com/gnasnik/titan-container/node/impl/provider/kube/manifest"
 )
 
 const (
@@ -41,13 +41,19 @@ func serviceToManifestService(service *types.Service) manifest.Service {
 	name := imageToServiceName(service.Image)
 	resource := resourceToManifestResource(&service.ComputeResources)
 	expose := exposeFromPort(service.Port)
-	return manifest.Service{
+	s := manifest.Service{
 		Name:      name,
 		Image:     service.Image,
 		Resources: &resource,
-		Expose:    []*manifest.ServiceExpose{&expose},
+		Expose:    make([]*manifest.ServiceExpose, 0),
 		Count:     podReplicas,
 	}
+
+	if expose != nil {
+		s.Expose = append(s.Expose, expose)
+	}
+
+	return s
 }
 
 func imageToServiceName(image string) string {
@@ -62,6 +68,9 @@ func resourceToManifestResource(resource *types.ComputeResources) manifest.Resou
 	return *manifest.NewResourceUnits(uint64(resource.CPU*1000), uint64(resource.Memory*1000000))
 }
 
-func exposeFromPort(port int) manifest.ServiceExpose {
-	return manifest.ServiceExpose{Port: uint32(port), ExternalPort: uint32(port), Proto: manifest.TCP, Global: true}
+func exposeFromPort(port int) *manifest.ServiceExpose {
+	if port == 0 {
+		return nil
+	}
+	return &manifest.ServiceExpose{Port: uint32(port), ExternalPort: uint32(port), Proto: manifest.TCP, Global: true}
 }

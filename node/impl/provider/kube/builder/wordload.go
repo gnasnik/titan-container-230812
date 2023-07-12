@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/gnasnik/titan-container/provider/kube/manifest"
+	"github.com/gnasnik/titan-container/node/impl/provider/kube/manifest"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

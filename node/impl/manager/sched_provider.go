@@ -2,11 +2,12 @@ package manager
 
 import (
 	"context"
+	"sync"
+	"time"
+
 	"github.com/gnasnik/titan-container/api"
 	"github.com/gnasnik/titan-container/api/types"
 	"github.com/pkg/errors"
-	"sync"
-	"time"
 )
 
 var HeartbeatInterval = 10 * time.Second
@@ -69,6 +70,7 @@ func (p *ProviderScheduler) Get(id types.ProviderID) (api.Provider, error) {
 
 	provider, exist := p.providers[id]
 	if !exist {
+		log.Infof("p.providers:%#v", p.providers)
 		return nil, ErrProviderNotExist
 	}
 

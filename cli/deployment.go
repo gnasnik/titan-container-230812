@@ -20,6 +20,11 @@ var CreateDeployment = &cli.Command{
 	Usage: "create new deployment",
 	Flags: []cli.Flag{
 		&cli.StringFlag{
+			Name:     "deploy-id",
+			Usage:    "the deploy id",
+			Required: true,
+		},
+		&cli.StringFlag{
 			Name:     "provider-id",
 			Usage:    "the provider id",
 			Required: true,
@@ -61,11 +66,12 @@ var CreateDeployment = &cli.Command{
 		providerID := types.ProviderID(cctx.String("provider-id"))
 
 		deployment := &types.Deployment{
+			ID:         types.DeploymentID(cctx.String("deploy-id")),
 			ProviderID: providerID,
 			Name:       cctx.String("name"),
 			Services: []*types.Service{
 				{
-					Image: cctx.String("images"),
+					Image: cctx.String("image"),
 					ComputeResources: types.ComputeResources{
 						CPU:     cctx.Float64("cpu"),
 						Memory:  cctx.Int64("mem"),

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gnasnik/titan-container/provider/kube/manifest"
+	"github.com/gnasnik/titan-container/node/impl/provider/kube/manifest"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )

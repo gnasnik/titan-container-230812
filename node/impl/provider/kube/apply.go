@@ -5,7 +5,7 @@ package kube
 import (
 	"context"
 
-	"github.com/gnasnik/titan-container/provider/kube/builder"
+	"github.com/gnasnik/titan-container/node/impl/provider/kube/builder"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
