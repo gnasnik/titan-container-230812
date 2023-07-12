@@ -30,7 +30,7 @@ func ClusterDeploymentFromDeployment(deployment *types.Deployment) builder.IClus
 func deploymentToManifestGroup(deployment *types.Deployment) *manifest.Group {
 	services := make([]manifest.Service, 0, len(deployment.Services))
 	for _, service := range deployment.Services {
-		s := serviceToManifestService(&service)
+		s := serviceToManifestService(service)
 		services = append(services, s)
 	}
 

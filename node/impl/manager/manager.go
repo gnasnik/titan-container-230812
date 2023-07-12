@@ -79,8 +79,22 @@ func (m *Manager) CreateDeployment(ctx context.Context, id types.ProviderID, dep
 }
 
 func (m *Manager) UpdateDeployment(ctx context.Context, id types.ProviderID, deployment *types.Deployment) error {
-	//TODO implement me
-	panic("implement me")
+	providerApi, err := m.ProviderScheduler.Get(deployment.ProviderID)
+	if err != nil {
+		return err
+	}
+
+	err = providerApi.CreateDeployment(ctx, deployment)
+	if err != nil {
+		return err
+	}
+
+	err = m.DB.CreateDeployment(ctx, deployment)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (m *Manager) CloseDeployment(ctx context.Context, id types.ProviderID, deployment *types.Deployment) error {

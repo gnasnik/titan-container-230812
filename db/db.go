@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"embed"
 	_ "embed"
 	logging "github.com/ipfs/go-log/v2"
 	"github.com/jmoiron/sqlx"
@@ -24,18 +25,24 @@ func SqlDB(dsn string) (*sqlx.DB, error) {
 	log.Info("db: creating tables")
 	err = createAllTables(context.Background(), client)
 	if err != nil {
-		return nil, errors.Errorf("failed to init db: %w", err)
+		return nil, errors.Errorf("failed to init db: %v", err)
 	}
 
 	return client, nil
 }
 
-//go:embed create_main_db.sql
-var createMainDBSQL string
+//go:embed sql/*.sql
+var createMainDBSQL embed.FS
 
 func createAllTables(ctx context.Context, mainDB *sqlx.DB) error {
-	if _, err := mainDB.ExecContext(ctx, createMainDBSQL); err != nil {
-		return errors.Errorf("failed to create tables in main DB: %w", err)
+	fileNames := []string{"providers", "deployments", "services"}
+
+	for _, fileName := range fileNames {
+		content, _ := createMainDBSQL.ReadFile("sql/" + fileName + ".sql")
+		if _, err := mainDB.ExecContext(ctx, string(content)); err != nil {
+			return errors.Errorf("failed to create tables in main DB: %v", err)
+		}
 	}
+
 	return nil
 }

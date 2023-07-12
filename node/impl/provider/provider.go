@@ -5,7 +5,6 @@ import (
 
 	"github.com/gnasnik/titan-container/api"
 	"github.com/gnasnik/titan-container/api/types"
-	"github.com/gnasnik/titan-container/node/common"
 	"github.com/gnasnik/titan-container/provider"
 	"github.com/google/uuid"
 	"go.uber.org/fx"
@@ -17,8 +16,6 @@ var session = uuid.New()
 type Provider struct {
 	fx.In
 
-	*common.CommonAPI
-	ManagerAPI  api.Manager
 	ProviderMgr provider.Manager
 }
 
@@ -30,8 +27,8 @@ func (p *Provider) Version(context.Context) (api.Version, error) {
 	return api.ProviderAPIVersion0, nil
 }
 
-func (p *Provider) GetStatistics(ctx context.Context, id types.ProviderID) (*types.ResourcesStatistics, error) {
-	return p.ProviderMgr.GetStatistics(ctx, id)
+func (p *Provider) GetStatistics(ctx context.Context) (*types.ResourcesStatistics, error) {
+	return p.ProviderMgr.GetStatistics(ctx)
 }
 
 func (p *Provider) CreateDeployment(ctx context.Context, deployment *types.Deployment) error {

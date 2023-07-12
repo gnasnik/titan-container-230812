@@ -16,7 +16,7 @@ import (
 var log = logging.Logger("provider-manager")
 
 type Manager interface {
-	GetStatistics(ctx context.Context, id types.ProviderID) (*types.ResourcesStatistics, error)
+	GetStatistics(ctx context.Context) (*types.ResourcesStatistics, error)
 	CreateDeployment(ctx context.Context, deployment *types.Deployment) error
 	UpdateDeployment(ctx context.Context, deployment *types.Deployment) error
 	CloseDeployment(ctx context.Context, deployment *types.Deployment) error
@@ -43,7 +43,7 @@ func getResources(resources corev1.ResourceList) (uint64, uint64, uint64) {
 	return uint64(cpu.Value()), uint64(memory.Value()), uint64(storage.Value())
 }
 
-func (m *manager) GetStatistics(ctx context.Context, id types.ProviderID) (*types.ResourcesStatistics, error) {
+func (m *manager) GetStatistics(ctx context.Context) (*types.ResourcesStatistics, error) {
 	nodeList, err := m.kc.ListNodes(ctx)
 	if err != nil {
 		return nil, err

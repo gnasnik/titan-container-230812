@@ -5,4 +5,4 @@ CREATE TABLE IF NOT EXISTS providers(
     ip VARCHAR(128) NOT NULL,
     created_at DATETIME     DEFAULT NULL,
     updated_at DATETIME     DEFAULT NULL
-)ENGINE=InnoDB COMMENT='providers';
+    )ENGINE=InnoDB COMMENT='providers';

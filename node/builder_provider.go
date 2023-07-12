@@ -41,6 +41,7 @@ func ConfigProvider(c interface{}) Option {
 
 	return Options(
 		ConfigCommon(&cfg.Common),
+		Override(new(*config.ProviderCfg), cfg),
 		Override(new(titanprovider.Manager), titanprovider.NewManager),
 	)
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/gnasnik/titan-container/api"
 	"github.com/gnasnik/titan-container/api/types"
+	"github.com/pkg/errors"
 	"sync"
 	"time"
 )
@@ -11,6 +12,10 @@ import (
 var HeartbeatInterval = 10 * time.Second
 
 var ProviderTTL = 30 * time.Second
+
+var (
+	ErrProviderNotExist = errors.New("provider not exist")
+)
 
 type ProviderScheduler struct {
 	lk        sync.RWMutex
@@ -56,6 +61,18 @@ func (p *ProviderScheduler) AddProvider(id types.ProviderID, providerApi api.Pro
 		LastSeen: time.Now(),
 	}
 	return nil
+}
+
+func (p *ProviderScheduler) Get(id types.ProviderID) (api.Provider, error) {
+	p.lk.Lock()
+	defer p.lk.Unlock()
+
+	provider, exist := p.providers[id]
+	if !exist {
+		return nil, ErrProviderNotExist
+	}
+
+	return provider, nil
 }
 
 func (p *ProviderScheduler) delProvider(id types.ProviderID) {
