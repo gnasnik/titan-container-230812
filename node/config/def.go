@@ -48,7 +48,7 @@ func DefaultManagerCfg() *ManagerCfg {
 				RemoteListenAddress: "",
 			},
 		},
-		DatabaseAddress: "mysql_user:mysql_password@tcp(127.0.0.1:3306)/titan_container",
+		DatabaseAddress: "mysql_user:mysql_password@tcp(127.0.0.1:3306)/titan_container?parseTime=true",
 	}
 }
 

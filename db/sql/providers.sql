@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS providers(
     owner VARCHAR(128) NOT NULL,
     host_uri VARCHAR(128) NOT NULL,
     ip VARCHAR(128) NOT NULL,
+    state INT DEFAULT 0,
     created_at DATETIME     DEFAULT NULL,
     updated_at DATETIME     DEFAULT NULL
     )ENGINE=InnoDB COMMENT='providers';

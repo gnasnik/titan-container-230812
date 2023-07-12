@@ -59,8 +59,7 @@ func (m *Manager) UpdateProvider(ctx context.Context, provider *types.Provider) 
 }
 
 func (m *Manager) GetProviderList(ctx context.Context) ([]*types.Provider, error) {
-	//TODO implement me
-	panic("implement me")
+	return m.DB.GetAllProviders(ctx)
 }
 
 func (m *Manager) GetTemplateList(ctx context.Context) ([]*types.Template, error) {
@@ -74,8 +73,22 @@ func (m *Manager) CreateOrder(ctx context.Context) error {
 }
 
 func (m *Manager) CreateDeployment(ctx context.Context, id types.ProviderID, deployment *types.Deployment) error {
-	//TODO implement me
-	panic("implement me")
+	providerApi, err := m.ProviderScheduler.Get(deployment.ProviderID)
+	if err != nil {
+		return err
+	}
+
+	err = providerApi.CreateDeployment(ctx, deployment)
+	if err != nil {
+		return err
+	}
+
+	err = m.DB.CreateDeployment(ctx, deployment)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (m *Manager) UpdateDeployment(ctx context.Context, id types.ProviderID, deployment *types.Deployment) error {

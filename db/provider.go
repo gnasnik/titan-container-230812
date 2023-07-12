@@ -33,10 +33,20 @@ func (m *ManagerDB) CreateDeployment(ctx context.Context, deployment *types.Depl
 }
 
 func (m *ManagerDB) AddNewProvider(ctx context.Context, provider *types.Provider) error {
-	qry := `INSERT INTO providers (id, owner, host_uri, ip, created_at, updated_at) 
-		        VALUES (:id, :owner, :host_uri, :ip, :created_at, :updated_at) ON DUPLICATE KEY UPDATE  owner=:owner, host_uri=:host_uri, 
-		            ip=:ip, updated_at=:updated_at`
+	qry := `INSERT INTO providers (id, owner, host_uri, ip, state, created_at, updated_at) 
+		        VALUES (:id, :owner, :host_uri, :ip, :state, :created_at, :updated_at) ON DUPLICATE KEY UPDATE  owner=:owner, host_uri=:host_uri, 
+		            ip=:ip, state=:state, updated_at=:updated_at`
 	_, err := m.db.NamedExecContext(ctx, qry, provider)
 
 	return err
+}
+
+func (m *ManagerDB) GetAllProviders(ctx context.Context) ([]*types.Provider, error) {
+	var out []*types.Provider
+	qry := `SELECT * from providers`
+	err := m.db.Select(&out, qry)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }

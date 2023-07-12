@@ -4,13 +4,22 @@ import "time"
 
 type ProviderID string
 
+type ProviderState int
+
+const (
+	ProviderStateOnline ProviderState = iota + 1
+	ProviderStateOffline
+	ProviderStateAbnormal
+)
+
 type Provider struct {
-	ID        ProviderID `db:"id"`
-	Owner     string     `db:"owner"`
-	HostURI   string     `db:"host_uri"`
-	IP        string     `db:"ip"`
-	CreatedAt time.Time  `db:"created_at"`
-	UpdatedAt time.Time  `db:"updated_at"`
+	ID        ProviderID    `db:"id"`
+	Owner     string        `db:"owner"`
+	HostURI   string        `db:"host_uri"`
+	IP        string        `db:"ip"`
+	State     ProviderState `db:"state"`
+	CreatedAt time.Time     `db:"created_at"`
+	UpdatedAt time.Time     `db:"updated_at"`
 }
 
 type ResourcesStatistics struct {

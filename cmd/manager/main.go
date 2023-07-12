@@ -80,7 +80,7 @@ func main() {
 			return nil
 		},
 
-		Commands: append(local, lcli.Commands...),
+		Commands: append(local, append(lcli.Commands, lcli.ManagerCMDs...)...),
 	}
 
 	app.Setup()

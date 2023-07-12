@@ -6,5 +6,6 @@ import (
 
 // ManagerCMDs manager cmd
 var ManagerCMDs = []*cli.Command{
-	WithCategory("providers", providersCmds),
+	WithCategory("provider", providerCmds),
+	WithCategory("deployment", deploymentCmds),
 }
