@@ -42,6 +42,11 @@ type Service struct {
 	ComputeResources ComputeResources
 }
 
+type GetDeploymentOption struct {
+	Owner        string
+	DeploymentID DeploymentID
+}
+
 type ComputeResources struct {
 	CPU     float64 `db:"cpu"`
 	Memory  int64   `db:"memory"`

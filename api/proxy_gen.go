@@ -49,6 +49,8 @@ type ManagerStruct struct {
 
 		CreateDeployment func(p0 context.Context, p1 types.ProviderID, p2 *types.Deployment) error `perm:"admin"`
 
+		GetDeploymentList func(p0 context.Context, p1 *types.GetDeploymentOption) ([]*types.Deployment, error) `perm:"read"`
+
 		GetProviderList func(p0 context.Context) ([]*types.Provider, error) `perm:"read"`
 
 		GetTemplateList func(p0 context.Context) ([]*types.Template, error) `perm:"read"`
@@ -70,6 +72,8 @@ type ProviderStruct struct {
 		CloseDeployment func(p0 context.Context, p1 *types.Deployment) error `perm:"admin"`
 
 		CreateDeployment func(p0 context.Context, p1 *types.Deployment) error `perm:"admin"`
+
+		GetDeployment func(p0 context.Context, p1 types.DeploymentID) (*types.Deployment, error) `perm:"read"`
 
 		GetStatistics func(p0 context.Context) (*types.ResourcesStatistics, error) `perm:"read"`
 
@@ -216,6 +220,17 @@ func (s *ManagerStub) CreateDeployment(p0 context.Context, p1 types.ProviderID, 
 	return ErrNotSupported
 }
 
+func (s *ManagerStruct) GetDeploymentList(p0 context.Context, p1 *types.GetDeploymentOption) ([]*types.Deployment, error) {
+	if s.Internal.GetDeploymentList == nil {
+		return *new([]*types.Deployment), ErrNotSupported
+	}
+	return s.Internal.GetDeploymentList(p0, p1)
+}
+
+func (s *ManagerStub) GetDeploymentList(p0 context.Context, p1 *types.GetDeploymentOption) ([]*types.Deployment, error) {
+	return *new([]*types.Deployment), ErrNotSupported
+}
+
 func (s *ManagerStruct) GetProviderList(p0 context.Context) ([]*types.Provider, error) {
 	if s.Internal.GetProviderList == nil {
 		return *new([]*types.Provider), ErrNotSupported
@@ -291,6 +306,17 @@ func (s *ProviderStruct) CreateDeployment(p0 context.Context, p1 *types.Deployme
 
 func (s *ProviderStub) CreateDeployment(p0 context.Context, p1 *types.Deployment) error {
 	return ErrNotSupported
+}
+
+func (s *ProviderStruct) GetDeployment(p0 context.Context, p1 types.DeploymentID) (*types.Deployment, error) {
+	if s.Internal.GetDeployment == nil {
+		return nil, ErrNotSupported
+	}
+	return s.Internal.GetDeployment(p0, p1)
+}
+
+func (s *ProviderStub) GetDeployment(p0 context.Context, p1 types.DeploymentID) (*types.Deployment, error) {
+	return nil, ErrNotSupported
 }
 
 func (s *ProviderStruct) GetStatistics(p0 context.Context) (*types.ResourcesStatistics, error) {

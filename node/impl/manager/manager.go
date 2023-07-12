@@ -72,6 +72,10 @@ func (m *Manager) CreateOrder(ctx context.Context) error {
 	panic("implement me")
 }
 
+func (m *Manager) GetDeploymentList(ctx context.Context, opt *types.GetDeploymentOption) ([]*types.Deployment, error) {
+	return m.DB.GetDeployments(ctx, opt)
+}
+
 func (m *Manager) CreateDeployment(ctx context.Context, id types.ProviderID, deployment *types.Deployment) error {
 	providerApi, err := m.ProviderScheduler.Get(deployment.ProviderID)
 	if err != nil {

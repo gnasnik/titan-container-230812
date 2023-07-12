@@ -22,3 +22,13 @@ func addNewServices(ctx context.Context, tx *sqlx.Tx, services []*types.Service)
 
 	return err
 }
+
+func (m *ManagerDB) GetDeployments(ctx context.Context, option *types.GetDeploymentOption) ([]*types.Deployment, error) {
+	var out []*types.Deployment
+	qry := `SELECT * from deployments`
+	err := m.db.SelectContext(ctx, &out, qry)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}

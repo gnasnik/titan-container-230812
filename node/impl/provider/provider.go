@@ -31,6 +31,11 @@ func (p *Provider) GetStatistics(ctx context.Context) (*types.ResourcesStatistic
 	return p.ProviderMgr.GetStatistics(ctx)
 }
 
+func (p *Provider) GetDeployment(ctx context.Context, id types.DeploymentID) (*types.Deployment, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (p *Provider) CreateDeployment(ctx context.Context, deployment *types.Deployment) error {
 	return p.ProviderMgr.CreateDeployment(ctx, deployment)
 }

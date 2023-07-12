@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"github.com/gnasnik/titan-container/api/types"
 	"github.com/urfave/cli/v2"
 )
@@ -10,6 +11,7 @@ var deploymentCmds = &cli.Command{
 	Usage: "Manager deployment",
 	Subcommands: []*cli.Command{
 		CreateDeployment,
+		DeploymentList,
 	},
 }
 
@@ -21,6 +23,10 @@ var CreateDeployment = &cli.Command{
 			Name:     "provider-id",
 			Usage:    "the provider id",
 			Required: true,
+		},
+		&cli.StringFlag{
+			Name:  "owner",
+			Usage: "owner address",
 		},
 		&cli.StringFlag{
 			Name:  "name",
@@ -70,5 +76,45 @@ var CreateDeployment = &cli.Command{
 		}
 
 		return api.CreateDeployment(ctx, providerID, deployment)
+	},
+}
+
+var DeploymentList = &cli.Command{
+	Name:  "list",
+	Usage: "List deployments",
+	Flags: []cli.Flag{
+		&cli.StringFlag{
+			Name:  "owner",
+			Usage: "owner address",
+		},
+		&cli.StringFlag{
+			Name:  "id",
+			Usage: "the deployment id",
+		},
+	},
+	Action: func(cctx *cli.Context) error {
+		api, closer, err := GetManagerAPI(cctx)
+		if err != nil {
+			return err
+		}
+		defer closer()
+
+		ctx := ReqContext(cctx)
+
+		opts := &types.GetDeploymentOption{
+			Owner:        cctx.String("owner"),
+			DeploymentID: types.DeploymentID(cctx.String("id")),
+		}
+
+		deployments, err := api.GetDeploymentList(ctx, opts)
+		if err != nil {
+			return err
+		}
+
+		for _, deployment := range deployments {
+			fmt.Println(deployment)
+		}
+
+		return nil
 	},
 }
