@@ -63,5 +63,5 @@ func resourceToManifestResource(resource *types.ComputeResources) manifest.Resou
 }
 
 func exposeFromPort(port int) manifest.ServiceExpose {
-	return manifest.ServiceExpose{Port: uint32(port), ExternalPort: uint32(port), Proto: manifest.TCP}
+	return manifest.ServiceExpose{Port: uint32(port), ExternalPort: uint32(port), Proto: manifest.TCP, Global: true}
 }
