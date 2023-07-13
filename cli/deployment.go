@@ -65,6 +65,9 @@ var CreateDeployment = &cli.Command{
 			ProviderID: providerID,
 			Name:       cctx.String("name"),
 			Image:      cctx.String("image"),
+			Env: map[string]string{
+				"hello": "test",
+			},
 			Services: []*types.Service{
 				{
 					Image: cctx.String("image"),

@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS deployments(
     balance FLOAT        DEFAULT 0,
     cost FLOAT        DEFAULT 0,
     provider_id VARCHAR(128) NOT NULL,
+    env VARCHAR(128) DEFAULT NULL,
     expiration DATETIME     DEFAULT NULL,
     created_at DATETIME     DEFAULT NULL,
     updated_at DATETIME     DEFAULT NULL

@@ -1,6 +1,11 @@
 package types
 
-import "time"
+import (
+	"database/sql/driver"
+	"encoding/json"
+	"errors"
+	"time"
+)
 
 type DeploymentID string
 
@@ -30,6 +35,7 @@ type Deployment struct {
 	Cost       float64         `db:"cost"`
 	ProviderID ProviderID      `db:"provider_id"`
 	Expiration time.Time       `db:"expiration"`
+	Env        Env             `db:"env"`
 	CreatedAt  time.Time       `db:"created_at"`
 	UpdatedAt  time.Time       `db:"updated_at"`
 
@@ -43,6 +49,27 @@ type Service struct {
 	CreatedAt time.Time `db:"created_at"`
 	UpdatedAt time.Time `db:"updated_at"`
 	ComputeResources
+}
+
+type Env map[string]string
+
+func (e Env) Value() (driver.Value, error) {
+	x := make(map[string]string)
+	for k, v := range e {
+		x[k] = v
+	}
+	return json.Marshal(x)
+}
+
+func (e Env) Scan(value interface{}) error {
+	b, ok := value.([]byte)
+	if !ok {
+		return errors.New("type assertion to []byte failed")
+	}
+	if err := json.Unmarshal(b, &e); err != nil {
+		return err
+	}
+	return nil
 }
 
 type GetDeploymentOption struct {
