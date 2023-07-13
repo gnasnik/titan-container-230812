@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/gnasnik/titan-container/api/types"
@@ -13,13 +12,14 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-var log = logging.Logger("provider-manager")
+var log = logging.Logger("provider")
 
 type Manager interface {
 	GetStatistics(ctx context.Context) (*types.ResourcesStatistics, error)
 	CreateDeployment(ctx context.Context, deployment *types.Deployment) error
 	UpdateDeployment(ctx context.Context, deployment *types.Deployment) error
 	CloseDeployment(ctx context.Context, deployment *types.Deployment) error
+	GetDeployment(ctx context.Context, id types.DeploymentID) (*types.Deployment, error)
 }
 
 type manager struct {
@@ -61,21 +61,14 @@ func (m *manager) GetStatistics(ctx context.Context) (*types.ResourcesStatistics
 		statistics.Memory.Available += memory
 		statistics.Storage.Available += storage
 	}
-	buf, _ := json.Marshal(statistics)
-	log.Debugf("statistics:%s", string(buf))
 	return statistics, nil
 }
 
 func (m *manager) CreateDeployment(ctx context.Context, deployment *types.Deployment) error {
-	buf, _ := json.Marshal(deployment)
-	fmt.Printf("deployment:%#v\n", string(buf))
-	// for _, service := range deployment.Services {
-	// 	fmt.Printf("service:%#v\n", *service)
-	// }
-
-	k8sDeployment := ClusterDeploymentFromDeployment(deployment)
-	if k8sDeployment.ManifestGroup() == nil || len(k8sDeployment.ManifestGroup().Services) == 0 {
-		return fmt.Errorf("deployment service can not empty")
+	k8sDeployment, err := ClusterDeploymentFromDeployment(deployment)
+	if err != nil {
+		log.Errorf("CreateDeployment %s", err.Error())
+		return err
 	}
 
 	ctx = context.WithValue(ctx, builder.SettingsKey, builder.NewDefaultSettings())
@@ -83,9 +76,10 @@ func (m *manager) CreateDeployment(ctx context.Context, deployment *types.Deploy
 }
 
 func (m *manager) UpdateDeployment(ctx context.Context, deployment *types.Deployment) error {
-	k8sDeployment := ClusterDeploymentFromDeployment(deployment)
-	if k8sDeployment.ManifestGroup() == nil || len(k8sDeployment.ManifestGroup().Services) == 0 {
-		return fmt.Errorf("deployment service can not empty")
+	k8sDeployment, err := ClusterDeploymentFromDeployment(deployment)
+	if err != nil {
+		log.Errorf("UpdateDeployment %s", err.Error())
+		return err
 	}
 
 	ctx = context.WithValue(ctx, builder.SettingsKey, builder.NewDefaultSettings())
@@ -93,11 +87,20 @@ func (m *manager) UpdateDeployment(ctx context.Context, deployment *types.Deploy
 }
 
 func (m *manager) CloseDeployment(ctx context.Context, deployment *types.Deployment) error {
-	k8sDeployment := ClusterDeploymentFromDeployment(deployment)
+	k8sDeployment, err := ClusterDeploymentFromDeployment(deployment)
+	if err != nil {
+		log.Errorf("CloseDeployment %s", err.Error())
+		return err
+	}
+
 	did := k8sDeployment.DeploymentID()
 	ns := builder.DidNS(did)
 	if len(ns) == 0 {
 		return fmt.Errorf("can not get ns from deployment id %s and owner %s", deployment.ID, deployment.Owner)
 	}
 	return m.kc.DeleteNS(ctx, ns)
+}
+
+func (m *manager) GetDeployment(ctx context.Context, id types.DeploymentID) (*types.Deployment, error) {
+	return nil, nil
 }

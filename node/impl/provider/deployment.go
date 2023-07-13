@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/gnasnik/titan-container/api/types"
@@ -12,9 +13,16 @@ const (
 	podReplicas = 1
 )
 
-func ClusterDeploymentFromDeployment(deployment *types.Deployment) builder.IClusterDeployment {
+func ClusterDeploymentFromDeployment(deployment *types.Deployment) (builder.IClusterDeployment, error) {
+	if len(deployment.ID) == 0 {
+		return nil, fmt.Errorf("deployment ID can not empty")
+	}
+
 	deploymentID := manifest.DeploymentID{ID: string(deployment.ID), Owner: deployment.Owner}
-	group := deploymentToManifestGroup(deployment)
+	group, err := deploymentToManifestGroup(deployment)
+	if err != nil {
+		return nil, err
+	}
 
 	settings := builder.ClusterSettings{
 		SchedulerParams: make([]*builder.SchedulerParams, len(group.Services)),
@@ -24,20 +32,30 @@ func ClusterDeploymentFromDeployment(deployment *types.Deployment) builder.IClus
 		Did:     deploymentID,
 		Group:   group,
 		Sparams: settings,
-	}
+	}, nil
 }
 
-func deploymentToManifestGroup(deployment *types.Deployment) *manifest.Group {
+func deploymentToManifestGroup(deployment *types.Deployment) (*manifest.Group, error) {
+	if len(deployment.Services) == 0 {
+		return nil, fmt.Errorf("deployment service can not empty")
+	}
+
 	services := make([]manifest.Service, 0, len(deployment.Services))
 	for _, service := range deployment.Services {
-		s := serviceToManifestService(service)
+		s, err := serviceToManifestService(service)
+		if err != nil {
+			return nil, err
+		}
 		services = append(services, s)
 	}
 
-	return &manifest.Group{Services: services}
+	return &manifest.Group{Services: services}, nil
 }
 
-func serviceToManifestService(service *types.Service) manifest.Service {
+func serviceToManifestService(service *types.Service) (manifest.Service, error) {
+	if len(service.Image) == 0 {
+		return manifest.Service{}, fmt.Errorf("service image can not empty")
+	}
 	name := imageToServiceName(service.Image)
 	resource := resourceToManifestResource(&service.ComputeResources)
 	expose := exposeFromPort(service.Port)
@@ -53,7 +71,7 @@ func serviceToManifestService(service *types.Service) manifest.Service {
 		s.Expose = append(s.Expose, expose)
 	}
 
-	return s
+	return s, nil
 }
 
 func imageToServiceName(image string) string {

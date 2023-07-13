@@ -31,8 +31,7 @@ func (p *Provider) GetStatistics(ctx context.Context) (*types.ResourcesStatistic
 }
 
 func (p *Provider) GetDeployment(ctx context.Context, id types.DeploymentID) (*types.Deployment, error) {
-	//TODO implement me
-	panic("implement me")
+	return p.Manager.GetDeployment(ctx, id)
 }
 
 func (p *Provider) CreateDeployment(ctx context.Context, deployment *types.Deployment) error {

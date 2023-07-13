@@ -25,7 +25,8 @@ func TestDeploy(t *testing.T) {
 		Services: []*types.Service{&service},
 	}
 
-	k8sDeploy := ClusterDeploymentFromDeployment(&deploy)
+	k8sDeploy, err := ClusterDeploymentFromDeployment(&deploy)
+	require.NoError(t, err)
 
 	ctx := context.WithValue(context.Background(), builder.SettingsKey, builder.NewDefaultSettings())
 	err = client.Deploy(ctx, k8sDeploy)
@@ -43,7 +44,9 @@ func TestDeleteDeploy(t *testing.T) {
 		Services: []*types.Service{},
 	}
 
-	k8sDeploy := ClusterDeploymentFromDeployment(&deploy)
+	k8sDeploy, err := ClusterDeploymentFromDeployment(&deploy)
+	require.NoError(t, err)
+
 	ns := builder.DidNS(k8sDeploy.DeploymentID())
 
 	err = client.DeleteNS(context.Background(), ns)
@@ -71,16 +74,18 @@ func TestListNode(t *testing.T) {
 
 	statistics := &types.ResourcesStatistics{}
 	for _, node := range nodeList.Items {
-		cpu, memory, storage := getResources(node.Status.Capacity)
-		statistics.CPUCores.MaxCPUCores += cpu
-		statistics.Memory.MaxMemory += memory
-		statistics.Storage.MaxStorage += storage
-		t.Logf("max cpu %d, memory %d storage %d", cpu, memory, storage)
-		cpu, memory, storage = getResources(node.Status.Allocatable)
-		statistics.CPUCores.Available += cpu
-		statistics.Memory.Available += memory
-		statistics.Storage.Available += storage
-		t.Logf("Available cpu %d, memory %d storage %d", cpu, memory, storage)
+		buf, _ := json.Marshal(node)
+		t.Logf("buf:%s", string(buf))
+		// cpu, memory, storage := getResources(node.Status.Capacity)
+		// statistics.CPUCores.MaxCPUCores += cpu
+		// statistics.Memory.MaxMemory += memory
+		// statistics.Storage.MaxStorage += storage
+		// t.Logf("max cpu %d, memory %d storage %d", cpu, memory, storage)
+		// cpu, memory, storage = getResources(node.Status.Allocatable)
+		// statistics.CPUCores.Available += cpu
+		// statistics.Memory.Available += memory
+		// statistics.Storage.Available += storage
+		// t.Logf("Available cpu %d, memory %d storage %d", cpu, memory, storage)
 
 	}
 

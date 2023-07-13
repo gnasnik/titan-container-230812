@@ -13,6 +13,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/flowcontrol"
+	metricsclient "k8s.io/metrics/pkg/client/clientset/versioned"
 )
 
 type Client interface {
@@ -22,8 +23,9 @@ type Client interface {
 }
 
 type client struct {
-	kc  kubernetes.Interface
-	log *logging.ZapEventLogger
+	kc   kubernetes.Interface
+	metc metricsclient.Interface
+	log  *logging.ZapEventLogger
 }
 
 func openKubeConfig(cfgPath string) (*rest.Config, error) {
@@ -64,9 +66,14 @@ func NewClient(configPath string) (Client, error) {
 		return nil, err
 	}
 
+	metc, err := metricsclient.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
+
 	var log = logging.Logger("client")
 
-	return &client{kc: clientSet, log: log}, nil
+	return &client{kc: clientSet, metc: metc, log: log}, nil
 }
 
 func (c *client) Deploy(ctx context.Context, deployment builder.IClusterDeployment) error {
