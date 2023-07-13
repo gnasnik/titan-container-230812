@@ -17,21 +17,6 @@ func NewManagerDB(db *sqlx.DB) *ManagerDB {
 	}
 }
 
-func (m *ManagerDB) CreateDeployment(ctx context.Context, deployment *types.Deployment) error {
-	tx, err := m.db.Beginx()
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
-	err = addNewDeployment(ctx, tx, deployment)
-	if err != nil {
-		return err
-	}
-
-	return addNewServices(ctx, tx, deployment.Services)
-}
-
 func (m *ManagerDB) AddNewProvider(ctx context.Context, provider *types.Provider) error {
 	qry := `INSERT INTO providers (id, owner, host_uri, ip, state, created_at, updated_at) 
 		        VALUES (:id, :owner, :host_uri, :ip, :state, :created_at, :updated_at) ON DUPLICATE KEY UPDATE  owner=:owner, host_uri=:host_uri, 

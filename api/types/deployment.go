@@ -22,6 +22,7 @@ type Deployment struct {
 	ID         DeploymentID    `db:"id"`
 	Name       string          `db:"name"`
 	Owner      string          `db:"owner"`
+	Image      string          `db:"image"`
 	State      DeploymentState `db:"state"`
 	Type       DeploymentType  `db:"type"`
 	Version    []byte          `db:"version"`
@@ -36,10 +37,12 @@ type Deployment struct {
 }
 
 type Service struct {
-	ID               int64  `db:"id"`
-	Image            string `db:"image"`
-	Port             int    `db:"port"`
-	ComputeResources ComputeResources
+	ID        int64     `db:"id"`
+	Image     string    `db:"image"`
+	Port      int       `db:"port"`
+	CreatedAt time.Time `db:"created_at"`
+	UpdatedAt time.Time `db:"updated_at"`
+	ComputeResources
 }
 
 type GetDeploymentOption struct {

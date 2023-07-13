@@ -20,11 +20,6 @@ var CreateDeployment = &cli.Command{
 	Usage: "create new deployment",
 	Flags: []cli.Flag{
 		&cli.StringFlag{
-			Name:     "deploy-id",
-			Usage:    "the deploy id",
-			Required: true,
-		},
-		&cli.StringFlag{
 			Name:     "provider-id",
 			Usage:    "the provider id",
 			Required: true,
@@ -69,6 +64,7 @@ var CreateDeployment = &cli.Command{
 			ID:         types.DeploymentID(cctx.String("deploy-id")),
 			ProviderID: providerID,
 			Name:       cctx.String("name"),
+			Image:      cctx.String("image"),
 			Services: []*types.Service{
 				{
 					Image: cctx.String("image"),

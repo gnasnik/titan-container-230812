@@ -10,6 +10,7 @@ import (
 	"github.com/gnasnik/titan-container/db"
 	"github.com/gnasnik/titan-container/node/handler"
 	"github.com/gnasnik/titan-container/node/modules/dtypes"
+	"github.com/google/uuid"
 	logging "github.com/ipfs/go-log/v2"
 	"github.com/pkg/errors"
 	"go.uber.org/fx"
@@ -83,6 +84,7 @@ func (m *Manager) CreateDeployment(ctx context.Context, id types.ProviderID, dep
 		return err
 	}
 
+	deployment.ID = types.DeploymentID(uuid.New().String())
 	err = providerApi.CreateDeployment(ctx, deployment)
 	if err != nil {
 		return err
