@@ -45,9 +45,9 @@ type ManagerStruct struct {
 	CommonStruct
 
 	Internal struct {
-		CloseDeployment func(p0 context.Context, p1 types.ProviderID, p2 *types.Deployment) error `perm:"admin"`
+		CloseDeployment func(p0 context.Context, p1 *types.Deployment) error `perm:"admin"`
 
-		CreateDeployment func(p0 context.Context, p1 types.ProviderID, p2 *types.Deployment) error `perm:"admin"`
+		CreateDeployment func(p0 context.Context, p1 *types.Deployment) error `perm:"admin"`
 
 		GetDeploymentList func(p0 context.Context, p1 *types.GetDeploymentOption) ([]*types.Deployment, error) `perm:"read"`
 
@@ -57,7 +57,7 @@ type ManagerStruct struct {
 
 		ProviderConnect func(p0 context.Context, p1 string, p2 *types.Provider) error `perm:"admin"`
 
-		UpdateDeployment func(p0 context.Context, p1 types.ProviderID, p2 *types.Deployment) error `perm:"admin"`
+		UpdateDeployment func(p0 context.Context, p1 *types.Deployment) error `perm:"admin"`
 
 		UpdateProvider func(p0 context.Context, p1 *types.Provider) error `perm:"admin"`
 	}
@@ -198,25 +198,25 @@ func (s *CommonStub) Version(p0 context.Context) (APIVersion, error) {
 	return *new(APIVersion), ErrNotSupported
 }
 
-func (s *ManagerStruct) CloseDeployment(p0 context.Context, p1 types.ProviderID, p2 *types.Deployment) error {
+func (s *ManagerStruct) CloseDeployment(p0 context.Context, p1 *types.Deployment) error {
 	if s.Internal.CloseDeployment == nil {
 		return ErrNotSupported
 	}
-	return s.Internal.CloseDeployment(p0, p1, p2)
+	return s.Internal.CloseDeployment(p0, p1)
 }
 
-func (s *ManagerStub) CloseDeployment(p0 context.Context, p1 types.ProviderID, p2 *types.Deployment) error {
+func (s *ManagerStub) CloseDeployment(p0 context.Context, p1 *types.Deployment) error {
 	return ErrNotSupported
 }
 
-func (s *ManagerStruct) CreateDeployment(p0 context.Context, p1 types.ProviderID, p2 *types.Deployment) error {
+func (s *ManagerStruct) CreateDeployment(p0 context.Context, p1 *types.Deployment) error {
 	if s.Internal.CreateDeployment == nil {
 		return ErrNotSupported
 	}
-	return s.Internal.CreateDeployment(p0, p1, p2)
+	return s.Internal.CreateDeployment(p0, p1)
 }
 
-func (s *ManagerStub) CreateDeployment(p0 context.Context, p1 types.ProviderID, p2 *types.Deployment) error {
+func (s *ManagerStub) CreateDeployment(p0 context.Context, p1 *types.Deployment) error {
 	return ErrNotSupported
 }
 
@@ -264,14 +264,14 @@ func (s *ManagerStub) ProviderConnect(p0 context.Context, p1 string, p2 *types.P
 	return ErrNotSupported
 }
 
-func (s *ManagerStruct) UpdateDeployment(p0 context.Context, p1 types.ProviderID, p2 *types.Deployment) error {
+func (s *ManagerStruct) UpdateDeployment(p0 context.Context, p1 *types.Deployment) error {
 	if s.Internal.UpdateDeployment == nil {
 		return ErrNotSupported
 	}
-	return s.Internal.UpdateDeployment(p0, p1, p2)
+	return s.Internal.UpdateDeployment(p0, p1)
 }
 
-func (s *ManagerStub) UpdateDeployment(p0 context.Context, p1 types.ProviderID, p2 *types.Deployment) error {
+func (s *ManagerStub) UpdateDeployment(p0 context.Context, p1 *types.Deployment) error {
 	return ErrNotSupported
 }
 

@@ -18,7 +18,7 @@ type Manager interface {
 	GetTemplateList(ctx context.Context) ([]*types.Template, error) //perm:read
 
 	GetDeploymentList(ctx context.Context, opt *types.GetDeploymentOption) ([]*types.Deployment, error) //perm:read
-	CreateDeployment(ctx context.Context, id types.ProviderID, deployment *types.Deployment) error      //perm:admin
-	UpdateDeployment(ctx context.Context, id types.ProviderID, deployment *types.Deployment) error      //perm:admin
-	CloseDeployment(ctx context.Context, id types.ProviderID, deployment *types.Deployment) error       //perm:admin
+	CreateDeployment(ctx context.Context, deployment *types.Deployment) error                           //perm:admin
+	UpdateDeployment(ctx context.Context, deployment *types.Deployment) error                           //perm:admin
+	CloseDeployment(ctx context.Context, deployment *types.Deployment) error                            //perm:admin
 }

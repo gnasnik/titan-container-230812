@@ -12,6 +12,19 @@ const (
 	ProviderStateAbnormal
 )
 
+func ProviderStateString(state ProviderState) string {
+	switch state {
+	case ProviderStateOnline:
+		return "Online"
+	case ProviderStateOffline:
+		return "Offline"
+	case ProviderStateAbnormal:
+		return "Abnormal"
+	default:
+		return "Unknown"
+	}
+}
+
 type Provider struct {
 	ID        ProviderID    `db:"id"`
 	Owner     string        `db:"owner"`

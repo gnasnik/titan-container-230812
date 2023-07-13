@@ -2,8 +2,10 @@ package cli
 
 import (
 	"fmt"
+	"github.com/docker/go-units"
 	"github.com/gnasnik/titan-container/api/types"
 	"github.com/gnasnik/titan-container/lib/tablewriter"
+	"github.com/pkg/errors"
 	"github.com/urfave/cli/v2"
 	"os"
 	"strings"
@@ -17,6 +19,7 @@ var deploymentCmds = &cli.Command{
 	Subcommands: []*cli.Command{
 		CreateDeployment,
 		DeploymentList,
+		DeleteDeployment,
 	},
 }
 
@@ -69,9 +72,7 @@ var CreateDeployment = &cli.Command{
 			ProviderID: providerID,
 			Name:       cctx.String("name"),
 			Image:      cctx.String("image"),
-			Env: map[string]string{
-				"hello": "test",
-			},
+			Env:        map[string]string{},
 			Services: []*types.Service{
 				{
 					Image: cctx.String("image"),
@@ -84,7 +85,7 @@ var CreateDeployment = &cli.Command{
 			},
 		}
 
-		return api.CreateDeployment(ctx, providerID, deployment)
+		return api.CreateDeployment(ctx, deployment)
 	},
 }
 
@@ -99,6 +100,10 @@ var DeploymentList = &cli.Command{
 		&cli.StringFlag{
 			Name:  "id",
 			Usage: "the deployment id",
+		},
+		&cli.BoolFlag{
+			Name:  "show-all",
+			Usage: "show deleted and inactive deployments",
 		},
 	},
 	Action: func(cctx *cli.Context) error {
@@ -125,7 +130,12 @@ var DeploymentList = &cli.Command{
 
 		opts := &types.GetDeploymentOption{
 			Owner:        cctx.String("owner"),
+			State:        []types.DeploymentState{types.DeploymentStateActive},
 			DeploymentID: types.DeploymentID(cctx.String("id")),
+		}
+
+		if cctx.Bool("show-all") {
+			opts.State = types.AllDeploymentStates
 		}
 
 		deployments, err := api.GetDeploymentList(ctx, opts)
@@ -150,10 +160,10 @@ var DeploymentList = &cli.Command{
 				"ID":              deployment.ID,
 				"Name":            deployment.Name,
 				"Image":           deployment.Image,
-				"State":           deployment.State,
+				"State":           types.DeploymentStateString(deployment.State),
 				"CPU":             resource.CPU,
-				"Memory":          resource.Memory,
-				"Storage":         resource.Storage,
+				"Memory":          units.BytesSize(float64(resource.Memory * units.MiB)),
+				"Storage":         units.BytesSize(float64(resource.Storage * units.MiB)),
 				"Services":        len(deployment.Services),
 				"CreatedTime":     deployment.CreatedAt.Format(defaultDateTimeLayout),
 				"ExposeAddresses": strings.Join(exposeAddresses, ";"),
@@ -163,6 +173,46 @@ var DeploymentList = &cli.Command{
 		}
 
 		tw.Flush(os.Stdout)
+		return nil
+	},
+}
+
+var DeleteDeployment = &cli.Command{
+	Name:  "delete",
+	Usage: "delete deployment",
+	Flags: []cli.Flag{},
+	Action: func(cctx *cli.Context) error {
+		if cctx.NArg() != 1 {
+			return IncorrectNumArgs(cctx)
+		}
+
+		api, closer, err := GetManagerAPI(cctx)
+		if err != nil {
+			return err
+		}
+		defer closer()
+
+		ctx := ReqContext(cctx)
+		deploymentID := types.DeploymentID(cctx.Args().First())
+
+		deployments, err := api.GetDeploymentList(ctx, &types.GetDeploymentOption{
+			DeploymentID: deploymentID,
+		})
+		if err != nil {
+			return err
+		}
+
+		if len(deployments) == 0 {
+			return errors.New("deployment not found")
+		}
+
+		for _, deployment := range deployments {
+			err = api.CloseDeployment(ctx, deployment)
+			if err != nil {
+				log.Errorf("delete deployment failed: %v", err)
+			}
+		}
+
 		return nil
 	},
 }

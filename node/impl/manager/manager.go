@@ -50,6 +50,7 @@ func (m *Manager) ProviderConnect(ctx context.Context, url string, provider *typ
 		provider.IP = strings.Split(remoteAddr, ":")[0]
 	}
 
+	provider.State = types.ProviderStateOnline
 	provider.CreatedAt = time.Now()
 	provider.UpdatedAt = time.Now()
 	return m.DB.AddNewProvider(ctx, provider)
@@ -78,7 +79,7 @@ func (m *Manager) GetDeploymentList(ctx context.Context, opt *types.GetDeploymen
 	return m.DB.GetDeployments(ctx, opt)
 }
 
-func (m *Manager) CreateDeployment(ctx context.Context, id types.ProviderID, deployment *types.Deployment) error {
+func (m *Manager) CreateDeployment(ctx context.Context, deployment *types.Deployment) error {
 	providerApi, err := m.ProviderScheduler.Get(deployment.ProviderID)
 	if err != nil {
 		return err
@@ -88,6 +89,7 @@ func (m *Manager) CreateDeployment(ctx context.Context, id types.ProviderID, dep
 	for i := 0; i < len(deployment.Services); i++ {
 		deployment.Services[i].DeploymentID = deployment.ID
 	}
+	deployment.State = types.DeploymentStateActive
 	deployment.CreatedAt = time.Now()
 	deployment.UpdatedAt = time.Now()
 
@@ -104,7 +106,7 @@ func (m *Manager) CreateDeployment(ctx context.Context, id types.ProviderID, dep
 	return nil
 }
 
-func (m *Manager) UpdateDeployment(ctx context.Context, id types.ProviderID, deployment *types.Deployment) error {
+func (m *Manager) UpdateDeployment(ctx context.Context, deployment *types.Deployment) error {
 	providerApi, err := m.ProviderScheduler.Get(deployment.ProviderID)
 	if err != nil {
 		return err
@@ -123,9 +125,18 @@ func (m *Manager) UpdateDeployment(ctx context.Context, id types.ProviderID, dep
 	return nil
 }
 
-func (m *Manager) CloseDeployment(ctx context.Context, id types.ProviderID, deployment *types.Deployment) error {
-	//TODO implement me
-	panic("implement me")
+func (m *Manager) CloseDeployment(ctx context.Context, deployment *types.Deployment) error {
+	providerApi, err := m.ProviderScheduler.Get(deployment.ProviderID)
+	if err != nil {
+		return err
+	}
+
+	err = providerApi.CloseDeployment(ctx, deployment)
+	if err != nil {
+		return err
+	}
+
+	return m.DB.UpdateDeploymentState(ctx, deployment.ID, types.DeploymentStateClose)
 }
 
 var _ api.Manager = &Manager{}

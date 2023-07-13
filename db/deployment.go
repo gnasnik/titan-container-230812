@@ -2,8 +2,11 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"github.com/gnasnik/titan-container/api/types"
 	"github.com/jmoiron/sqlx"
+	"strconv"
+	"strings"
 )
 
 func (m *ManagerDB) CreateDeployment(ctx context.Context, deployment *types.Deployment) error {
@@ -51,6 +54,29 @@ type DeploymentService struct {
 func (m *ManagerDB) GetDeployments(ctx context.Context, option *types.GetDeploymentOption) ([]*types.Deployment, error) {
 	var ds []*DeploymentService
 	qry := `SELECT d.*, s.cpu, s.memory,s.storage, s.port, p.host_uri AS provider_expose_ip FROM deployments d LEFT JOIN services s ON d.id = s.deployment_id LEFT JOIN providers p ON d.provider_id = p.id`
+
+	var condition []string
+	if option.DeploymentID != "" {
+		condition = append(condition, fmt.Sprintf(`d.id = '%s'`, option.DeploymentID))
+	}
+
+	if option.Owner != "" {
+		condition = append(condition, fmt.Sprintf(`d.owner = '%s'`, option.Owner))
+	}
+
+	if len(option.State) > 0 {
+		var states []string
+		for _, s := range option.State {
+			states = append(states, strconv.Itoa(int(s)))
+		}
+		condition = append(condition, fmt.Sprintf(`d.state in (%s)`, strings.Join(states, ",")))
+	}
+
+	if len(condition) > 0 {
+		qry += ` WHERE `
+		qry += strings.Join(condition, ` AND `)
+	}
+
 	err := m.db.SelectContext(ctx, &ds, qry)
 	if err != nil {
 		return nil, err
@@ -69,4 +95,10 @@ func (m *ManagerDB) GetDeployments(ctx context.Context, option *types.GetDeploym
 	}
 
 	return out, nil
+}
+
+func (m *ManagerDB) UpdateDeploymentState(ctx context.Context, id types.DeploymentID, state types.DeploymentState) error {
+	qry := `Update deployments set state = ? where id = ?`
+	_, err := m.db.ExecContext(ctx, qry, state, id)
+	return err
 }

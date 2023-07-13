@@ -17,6 +17,21 @@ const (
 	DeploymentStateClose
 )
 
+func DeploymentStateString(state DeploymentState) string {
+	switch state {
+	case DeploymentStateActive:
+		return "Active"
+	case DeploymentStateInActive:
+		return "InActive"
+	case DeploymentStateClose:
+		return "Deleted"
+	default:
+		return "Unknown"
+	}
+}
+
+var AllDeploymentStates = []DeploymentState{DeploymentStateActive, DeploymentStateInActive, DeploymentStateClose}
+
 type DeploymentType int
 
 const (
@@ -77,6 +92,7 @@ func (e Env) Scan(value interface{}) error {
 type GetDeploymentOption struct {
 	Owner        string
 	DeploymentID DeploymentID
+	State        []DeploymentState
 }
 
 type ComputeResources struct {
