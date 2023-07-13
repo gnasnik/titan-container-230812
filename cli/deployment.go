@@ -3,8 +3,13 @@ package cli
 import (
 	"fmt"
 	"github.com/gnasnik/titan-container/api/types"
+	"github.com/gnasnik/titan-container/lib/tablewriter"
 	"github.com/urfave/cli/v2"
+	"os"
+	"strings"
 )
+
+var defaultDateTimeLayout = "2006-01-02 15:04:05"
 
 var deploymentCmds = &cli.Command{
 	Name:  "deployment",
@@ -61,7 +66,6 @@ var CreateDeployment = &cli.Command{
 		providerID := types.ProviderID(cctx.String("provider-id"))
 
 		deployment := &types.Deployment{
-			ID:         types.DeploymentID(cctx.String("deploy-id")),
 			ProviderID: providerID,
 			Name:       cctx.String("name"),
 			Image:      cctx.String("image"),
@@ -106,6 +110,19 @@ var DeploymentList = &cli.Command{
 
 		ctx := ReqContext(cctx)
 
+		tw := tablewriter.New(
+			tablewriter.Col("ID"),
+			tablewriter.Col("Name"),
+			tablewriter.Col("Image"),
+			tablewriter.Col("State"),
+			tablewriter.Col("CPU"),
+			tablewriter.Col("Memory"),
+			tablewriter.Col("Storage"),
+			tablewriter.Col("Services"),
+			tablewriter.Col("CreatedTime"),
+			tablewriter.Col("ExposeAddresses"),
+		)
+
 		opts := &types.GetDeploymentOption{
 			Owner:        cctx.String("owner"),
 			DeploymentID: types.DeploymentID(cctx.String("id")),
@@ -117,9 +134,35 @@ var DeploymentList = &cli.Command{
 		}
 
 		for _, deployment := range deployments {
-			fmt.Println(deployment)
+			var (
+				resource        types.ComputeResources
+				exposeAddresses []string
+			)
+
+			for _, service := range deployment.Services {
+				if resource == (types.ComputeResources{}) {
+					resource = service.ComputeResources
+				}
+				exposeAddresses = append(exposeAddresses, fmt.Sprintf("%s:%d", deployment.ProviderExposeIP, service.Port))
+			}
+
+			m := map[string]interface{}{
+				"ID":              deployment.ID,
+				"Name":            deployment.Name,
+				"Image":           deployment.Image,
+				"State":           deployment.State,
+				"CPU":             resource.CPU,
+				"Memory":          resource.Memory,
+				"Storage":         resource.Storage,
+				"Services":        len(deployment.Services),
+				"CreatedTime":     deployment.CreatedAt.Format(defaultDateTimeLayout),
+				"ExposeAddresses": strings.Join(exposeAddresses, ";"),
+			}
+
+			tw.Write(m)
 		}
 
+		tw.Flush(os.Stdout)
 		return nil
 	},
 }

@@ -6,6 +6,7 @@ require (
 	contrib.go.opencensus.io/exporter/prometheus v0.4.1
 	cosmossdk.io/math v1.0.1
 	github.com/BurntSushi/toml v1.3.2
+	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/cosmos/cosmos-sdk v0.47.3
 	github.com/fatih/color v1.15.0
 	github.com/filecoin-project/go-jsonrpc v0.3.1

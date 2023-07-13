@@ -85,6 +85,12 @@ func (m *Manager) CreateDeployment(ctx context.Context, id types.ProviderID, dep
 	}
 
 	deployment.ID = types.DeploymentID(uuid.New().String())
+	for i := 0; i < len(deployment.Services); i++ {
+		deployment.Services[i].DeploymentID = deployment.ID
+	}
+	deployment.CreatedAt = time.Now()
+	deployment.UpdatedAt = time.Now()
+
 	err = providerApi.CreateDeployment(ctx, deployment)
 	if err != nil {
 		return err

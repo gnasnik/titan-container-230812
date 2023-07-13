@@ -39,15 +39,17 @@ type Deployment struct {
 	CreatedAt  time.Time       `db:"created_at"`
 	UpdatedAt  time.Time       `db:"updated_at"`
 
-	Services []*Service
+	Services         []*Service
+	ProviderExposeIP string `db:"provider_expose_ip"`
 }
 
 type Service struct {
-	ID        int64     `db:"id"`
-	Image     string    `db:"image"`
-	Port      int       `db:"port"`
-	CreatedAt time.Time `db:"created_at"`
-	UpdatedAt time.Time `db:"updated_at"`
+	ID           int64        `db:"id"`
+	Image        string       `db:"image"`
+	Port         int          `db:"port"`
+	DeploymentID DeploymentID `db:"deployment_id"`
+	CreatedAt    time.Time    `db:"created_at"`
+	UpdatedAt    time.Time    `db:"updated_at"`
 	ComputeResources
 }
 
