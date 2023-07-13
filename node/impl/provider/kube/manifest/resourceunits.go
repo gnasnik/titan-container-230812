@@ -8,6 +8,6 @@ type ResourceUnits struct {
 	Endpoints []*Endpoint
 }
 
-func NewResourceUnits(cpu, memory uint64) *ResourceUnits {
-	return &ResourceUnits{CPU: NewCPU(cpu), Memory: NewMemory(memory)}
+func NewResourceUnits(cpu, memory, storage uint64) *ResourceUnits {
+	return &ResourceUnits{CPU: NewCPU(cpu), Memory: NewMemory(memory), Storage: []*Storage{NewStorage(storage)}}
 }

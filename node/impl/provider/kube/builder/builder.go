@@ -1,11 +1,6 @@
 package builder
 
 import (
-	"crypto/sha256"
-	"encoding/base32"
-	"fmt"
-	"strings"
-
 	"github.com/gnasnik/titan-container/node/impl/provider/kube/manifest"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -100,9 +95,10 @@ func DidNS(did manifest.DeploymentID) string {
 	// and must start and end with an alphanumeric character
 	// (e.g. 'my-name',  or '123-abc', regex used for validation
 	// is '[a-z0-9]([-a-z0-9]*[a-z0-9])?')
-	path := fmt.Sprintf("%s/%s", did.Owner, did.ID)
-	sha := sha256.Sum224([]byte(path))
-	return strings.ToLower(base32.HexEncoding.WithPadding(base32.NoPadding).EncodeToString(sha[:]))
+	// path := fmt.Sprintf("%s/%s", did.Owner, did.ID)
+	// sha := sha256.Sum224([]byte(path))
+	// return strings.ToLower(base32.HexEncoding.WithPadding(base32.NoPadding).EncodeToString(sha[:]))
+	return did.ID
 }
 
 func shouldBeIngress(expose *manifest.ServiceExpose) bool {

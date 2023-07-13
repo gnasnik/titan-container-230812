@@ -65,7 +65,7 @@ func imageToServiceName(image string) string {
 }
 
 func resourceToManifestResource(resource *types.ComputeResources) manifest.ResourceUnits {
-	return *manifest.NewResourceUnits(uint64(resource.CPU*1000), uint64(resource.Memory*1000000))
+	return *manifest.NewResourceUnits(uint64(resource.CPU*1000), uint64(resource.Memory*1000000), uint64(resource.Storage*1000000))
 }
 
 func exposeFromPort(port int) *manifest.ServiceExpose {

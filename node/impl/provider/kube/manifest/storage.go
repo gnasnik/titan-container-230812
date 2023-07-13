@@ -54,3 +54,7 @@ type Storage struct {
 	Quantity   ResourceValue
 	Attributes Attributes
 }
+
+func NewStorage(storage uint64) *Storage {
+	return &Storage{Quantity: NewResourceValue(storage)}
+}

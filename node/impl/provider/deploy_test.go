@@ -18,7 +18,7 @@ func TestDeploy(t *testing.T) {
 	client, err := kube.NewClient(kubeconfig)
 	require.NoError(t, err)
 
-	service := types.Service{Image: "nginx:1.14.2", Port: 80, ComputeResources: types.ComputeResources{CPU: 1, Memory: 100}}
+	service := types.Service{Image: "nginx:1.14.2", Port: 80, ComputeResources: types.ComputeResources{CPU: 0.1, Memory: 100, Storage: 100}}
 	deploy := types.Deployment{
 		ID:       types.DeploymentID("123"),
 		Owner:    "test",
@@ -37,11 +37,10 @@ func TestDeleteDeploy(t *testing.T) {
 	client, err := kube.NewClient(kubeconfig)
 	require.NoError(t, err)
 
-	service := types.Service{Image: "nginx:1.14.2", Port: 80, ComputeResources: types.ComputeResources{CPU: 1, Memory: 100}}
 	deploy := types.Deployment{
 		ID:       types.DeploymentID("123"),
 		Owner:    "test",
-		Services: []*types.Service{&service},
+		Services: []*types.Service{},
 	}
 
 	k8sDeploy := ClusterDeploymentFromDeployment(&deploy)
@@ -52,7 +51,7 @@ func TestDeleteDeploy(t *testing.T) {
 }
 
 func TestCPUUnixt(t *testing.T) {
-	resources := manifest.NewResourceUnits(1000, 512)
+	resources := manifest.NewResourceUnits(1000, 100, 100)
 	t.Logf("cpu:%d", resources.CPU.Units.Val.Uint64())
 }
 
