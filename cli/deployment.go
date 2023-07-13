@@ -8,7 +8,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/urfave/cli/v2"
 	"os"
-	"strings"
 )
 
 var defaultDateTimeLayout = "2006-01-02 15:04:05"
@@ -71,7 +70,6 @@ var CreateDeployment = &cli.Command{
 		deployment := &types.Deployment{
 			ProviderID: providerID,
 			Name:       cctx.String("name"),
-			Image:      cctx.String("image"),
 			Env:        map[string]string{},
 			Services: []*types.Service{
 				{
@@ -123,7 +121,6 @@ var DeploymentList = &cli.Command{
 			tablewriter.Col("CPU"),
 			tablewriter.Col("Memory"),
 			tablewriter.Col("Storage"),
-			tablewriter.Col("Services"),
 			tablewriter.Col("CreatedTime"),
 			tablewriter.Col("ExposeAddresses"),
 		)
@@ -144,32 +141,20 @@ var DeploymentList = &cli.Command{
 		}
 
 		for _, deployment := range deployments {
-			var (
-				resource        types.ComputeResources
-				exposeAddresses []string
-			)
-
 			for _, service := range deployment.Services {
-				if resource == (types.ComputeResources{}) {
-					resource = service.ComputeResources
+				m := map[string]interface{}{
+					"ID":              deployment.ID,
+					"Name":            deployment.Name,
+					"Image":           service.Image,
+					"State":           types.DeploymentStateString(deployment.State),
+					"CPU":             service.CPU,
+					"Memory":          units.BytesSize(float64(service.Memory * units.MiB)),
+					"Storage":         units.BytesSize(float64(service.Storage * units.MiB)),
+					"CreatedTime":     deployment.CreatedAt.Format(defaultDateTimeLayout),
+					"ExposeAddresses": fmt.Sprintf("%s:%d", deployment.ProviderExposeIP, service.Port),
 				}
-				exposeAddresses = append(exposeAddresses, fmt.Sprintf("%s:%d", deployment.ProviderExposeIP, service.Port))
+				tw.Write(m)
 			}
-
-			m := map[string]interface{}{
-				"ID":              deployment.ID,
-				"Name":            deployment.Name,
-				"Image":           deployment.Image,
-				"State":           types.DeploymentStateString(deployment.State),
-				"CPU":             resource.CPU,
-				"Memory":          units.BytesSize(float64(resource.Memory * units.MiB)),
-				"Storage":         units.BytesSize(float64(resource.Storage * units.MiB)),
-				"Services":        len(deployment.Services),
-				"CreatedTime":     deployment.CreatedAt.Format(defaultDateTimeLayout),
-				"ExposeAddresses": strings.Join(exposeAddresses, ";"),
-			}
-
-			tw.Write(m)
 		}
 
 		tw.Flush(os.Stdout)

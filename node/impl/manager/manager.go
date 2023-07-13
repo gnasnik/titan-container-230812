@@ -98,6 +98,11 @@ func (m *Manager) CreateDeployment(ctx context.Context, deployment *types.Deploy
 		return err
 	}
 
+	//successDeployment, err := providerApi.GetDeployment(ctx, deployment.ID)
+	//if err != nil {
+	//	return err
+	//}
+
 	err = m.DB.CreateDeployment(ctx, deployment)
 	if err != nil {
 		return err

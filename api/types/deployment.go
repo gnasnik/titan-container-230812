@@ -42,7 +42,6 @@ type Deployment struct {
 	ID         DeploymentID    `db:"id"`
 	Name       string          `db:"name"`
 	Owner      string          `db:"owner"`
-	Image      string          `db:"image"`
 	State      DeploymentState `db:"state"`
 	Type       DeploymentType  `db:"type"`
 	Version    []byte          `db:"version"`

@@ -2,7 +2,6 @@ CREATE TABLE IF NOT EXISTS deployments(
     id VARCHAR(128) NOT NULL UNIQUE,
     owner VARCHAR(128) NOT NULL,
     name VARCHAR(128) NOT NULL DEFAULT '',
-    image VARCHAR(128) NOT NULL DEFAULT '',
     state INT DEFAULT 0,
     type INT DEFAULT 0,
     version VARCHAR(128) DEFAULT '',
