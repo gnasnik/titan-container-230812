@@ -70,7 +70,6 @@ var CreateDeployment = &cli.Command{
 		deployment := &types.Deployment{
 			ProviderID: providerID,
 			Name:       cctx.String("name"),
-			Env:        map[string]string{},
 			Services: []*types.Service{
 				{
 					Image: cctx.String("image"),
@@ -79,6 +78,8 @@ var CreateDeployment = &cli.Command{
 						Memory:  cctx.Int64("mem"),
 						Storage: cctx.Int64("storage"),
 					},
+					Env:       map[string]string{"hello": "test"},
+					Arguments: "--test",
 				},
 			},
 		}

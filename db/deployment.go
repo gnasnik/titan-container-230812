@@ -30,17 +30,17 @@ func (m *ManagerDB) CreateDeployment(ctx context.Context, deployment *types.Depl
 }
 
 func addNewDeployment(ctx context.Context, tx *sqlx.Tx, deployment *types.Deployment) error {
-	qry := `INSERT INTO deployments (id, name, owner, state, type, version, balance, cost, expiration, provider_id, env, created_at, updated_at) 
-		        VALUES (:id, :name, :owner, :state, :type, :version, :balance, :cost, :expiration, :provider_id, :env, :created_at, :updated_at)
-		         ON DUPLICATE KEY UPDATE  state=:state, version=:version, balance=:balance, cost=:cost, expiration=:expiration, env=:env, updated_at=:updated_at`
+	qry := `INSERT INTO deployments (id, name, owner, state, type, version, balance, cost, expiration, provider_id, created_at, updated_at) 
+		        VALUES (:id, :name, :owner, :state, :type, :version, :balance, :cost, :expiration, :provider_id, :created_at, :updated_at)
+		         ON DUPLICATE KEY UPDATE  state=:state, version=:version, balance=:balance, cost=:cost, expiration=:expiration, updated_at=:updated_at`
 	_, err := tx.NamedExecContext(ctx, qry, deployment)
 
 	return err
 }
 
 func addNewServices(ctx context.Context, tx *sqlx.Tx, services []*types.Service) error {
-	qry := `INSERT INTO services (id, image, port, cpu, memory, storage, deployment_id, created_at, updated_at) 
-		        VALUES (:id, :image, :port, :cpu, :memory, :storage, :deployment_id, :created_at, :updated_at)`
+	qry := `INSERT INTO services (id, image, port, cpu, memory, storage, deployment_id, env, arguments, created_at, updated_at) 
+		        VALUES (:id, :image, :port, :cpu, :memory, :storage, :deployment_id, :env, :arguments, :created_at, :updated_at)`
 	_, err := tx.NamedExecContext(ctx, qry, services)
 
 	return err
@@ -53,7 +53,7 @@ type DeploymentService struct {
 
 func (m *ManagerDB) GetDeployments(ctx context.Context, option *types.GetDeploymentOption) ([]*types.Deployment, error) {
 	var ds []*DeploymentService
-	qry := `SELECT d.*, s.image, s.cpu, s.memory,s.storage, s.port, p.host_uri AS provider_expose_ip FROM deployments d LEFT JOIN services s ON d.id = s.deployment_id LEFT JOIN providers p ON d.provider_id = p.id`
+	qry := `SELECT d.*, s.image, s.cpu, s.memory,s.storage, s.port, s.env, s.arguments, p.host_uri AS provider_expose_ip FROM deployments d LEFT JOIN services s ON d.id = s.deployment_id LEFT JOIN providers p ON d.provider_id = p.id`
 
 	var condition []string
 	if option.DeploymentID != "" {

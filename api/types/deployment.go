@@ -39,22 +39,20 @@ const (
 )
 
 type Deployment struct {
-	ID         DeploymentID    `db:"id"`
-	Name       string          `db:"name"`
-	Owner      string          `db:"owner"`
-	State      DeploymentState `db:"state"`
-	Type       DeploymentType  `db:"type"`
-	Version    []byte          `db:"version"`
-	Balance    float64         `db:"balance"`
-	Cost       float64         `db:"cost"`
-	ProviderID ProviderID      `db:"provider_id"`
-	Expiration time.Time       `db:"expiration"`
-	Env        Env             `db:"env"`
-	CreatedAt  time.Time       `db:"created_at"`
-	UpdatedAt  time.Time       `db:"updated_at"`
-
+	ID               DeploymentID    `db:"id"`
+	Name             string          `db:"name"`
+	Owner            string          `db:"owner"`
+	State            DeploymentState `db:"state"`
+	Type             DeploymentType  `db:"type"`
+	Version          []byte          `db:"version"`
+	Balance          float64         `db:"balance"`
+	Cost             float64         `db:"cost"`
+	ProviderID       ProviderID      `db:"provider_id"`
+	Expiration       time.Time       `db:"expiration"`
+	CreatedAt        time.Time       `db:"created_at"`
+	UpdatedAt        time.Time       `db:"updated_at"`
+	ProviderExposeIP string          `db:"provider_expose_ip"`
 	Services         []*Service
-	ProviderExposeIP string `db:"provider_expose_ip"`
 }
 
 type Service struct {
@@ -62,6 +60,8 @@ type Service struct {
 	Image        string       `db:"image"`
 	Port         int          `db:"port"`
 	DeploymentID DeploymentID `db:"deployment_id"`
+	Env          Env          `db:"env"`
+	Arguments    string       `db:"arguments"`
 	CreatedAt    time.Time    `db:"created_at"`
 	UpdatedAt    time.Time    `db:"updated_at"`
 	ComputeResources
