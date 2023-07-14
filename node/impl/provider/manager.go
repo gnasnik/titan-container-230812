@@ -10,7 +10,6 @@ import (
 	"github.com/gnasnik/titan-container/node/impl/provider/kube/builder"
 	"github.com/gnasnik/titan-container/node/impl/provider/kube/manifest"
 	logging "github.com/ipfs/go-log/v2"
-	corev1 "k8s.io/api/core/v1"
 )
 
 var log = logging.Logger("provider")
@@ -36,13 +35,6 @@ func NewManager(config *config.ProviderCfg) (Manager, error) {
 		return nil, err
 	}
 	return &manager{kc: client, providerCfg: config}, nil
-}
-
-func getResources(resources corev1.ResourceList) (uint64, uint64, uint64) {
-	cpu := resources[corev1.ResourceCPU]
-	memory := resources[corev1.ResourceMemory]
-	storage := resources[corev1.ResourceEphemeralStorage]
-	return uint64(cpu.Value()), uint64(memory.Value()), uint64(storage.Value())
 }
 
 func (m *manager) GetStatistics(ctx context.Context) (*types.ResourcesStatistics, error) {
@@ -77,18 +69,6 @@ func (m *manager) CreateDeployment(ctx context.Context, deployment *types.Deploy
 	if err != nil {
 		log.Errorf("CreateDeployment %s", err.Error())
 		return err
-	}
-
-	did := k8sDeployment.DeploymentID()
-	ns := builder.DidNS(did)
-
-	namespace, err := m.kc.GetNS(ctx, ns)
-	if err != nil {
-		return err
-	}
-
-	if namespace != nil {
-		return fmt.Errorf("deployment %s already exist, you can update it", deployment.ID)
 	}
 
 	ctx = context.WithValue(ctx, builder.SettingsKey, builder.NewDefaultSettings())
