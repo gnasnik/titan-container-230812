@@ -16,7 +16,7 @@ type remoteProvider struct {
 }
 
 func connectRemoteProvider(ctx context.Context, fa api.Common, url string) (*remoteProvider, error) {
-	token, err := fa.AuthNew(ctx, []auth.Permission{"admin"})
+	token, err := fa.AuthNew(ctx, []auth.Permission{"read", "admin"})
 	if err != nil {
 		return nil, xerrors.Errorf("creating auth token for remote connection: %w", err)
 	}

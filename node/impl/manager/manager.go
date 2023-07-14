@@ -25,7 +25,7 @@ type Manager struct {
 	api.Common
 	DB *db.ManagerDB
 
-	ProviderScheduler *ProviderScheduler
+	ProviderManager *ProviderManager
 
 	SetManagerConfigFunc dtypes.SetManagerConfigFunc
 	GetManagerConfigFunc dtypes.GetManagerConfigFunc
@@ -41,7 +41,7 @@ func (m *Manager) ProviderConnect(ctx context.Context, url string, provider *typ
 
 	log.Infof("Connected to a remote provider at %s, provider id %s", remoteAddr, provider.ID)
 
-	err = m.ProviderScheduler.AddProvider(provider.ID, p)
+	err = m.ProviderManager.AddProvider(provider.ID, p)
 	if err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func (m *Manager) GetDeploymentList(ctx context.Context, opt *types.GetDeploymen
 }
 
 func (m *Manager) CreateDeployment(ctx context.Context, deployment *types.Deployment) error {
-	providerApi, err := m.ProviderScheduler.Get(deployment.ProviderID)
+	providerApi, err := m.ProviderManager.Get(deployment.ProviderID)
 	if err != nil {
 		return err
 	}
@@ -112,7 +112,7 @@ func (m *Manager) CreateDeployment(ctx context.Context, deployment *types.Deploy
 }
 
 func (m *Manager) UpdateDeployment(ctx context.Context, deployment *types.Deployment) error {
-	providerApi, err := m.ProviderScheduler.Get(deployment.ProviderID)
+	providerApi, err := m.ProviderManager.Get(deployment.ProviderID)
 	if err != nil {
 		return err
 	}
@@ -131,7 +131,7 @@ func (m *Manager) UpdateDeployment(ctx context.Context, deployment *types.Deploy
 }
 
 func (m *Manager) CloseDeployment(ctx context.Context, deployment *types.Deployment) error {
-	providerApi, err := m.ProviderScheduler.Get(deployment.ProviderID)
+	providerApi, err := m.ProviderManager.Get(deployment.ProviderID)
 	if err != nil {
 		return err
 	}

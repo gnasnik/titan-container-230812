@@ -55,13 +55,23 @@ type Deployment struct {
 	Services         []*Service
 }
 
+type ServiceState int
+
+const (
+	ServiceStateNormal ServiceState = iota + 1
+	ServiceStateError
+)
+
 type Service struct {
 	ID           int64        `db:"id"`
 	Image        string       `db:"image"`
+	Name         string       `db:"name"`
 	Port         int          `db:"port"`
 	ExposePort   int          `db:"expose_port"`
 	DeploymentID DeploymentID `db:"deployment_id"`
 	Env          Env          `db:"env"`
+	State        ServiceState `db:"state"`
+	ErrorMessage string       `db:"error_message"`
 	Arguments    string       `db:"arguments"`
 	CreatedAt    time.Time    `db:"created_at"`
 	UpdatedAt    time.Time    `db:"updated_at"`

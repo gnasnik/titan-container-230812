@@ -18,7 +18,7 @@ var (
 	ErrProviderNotExist = errors.New("provider not exist")
 )
 
-type ProviderScheduler struct {
+type ProviderManager struct {
 	lk        sync.RWMutex
 	providers map[types.ProviderID]*providerLife
 }
@@ -39,8 +39,8 @@ func (p *providerLife) Expired() bool {
 	return false
 }
 
-func NewProviderScheduler() *ProviderScheduler {
-	s := &ProviderScheduler{
+func NewProviderScheduler() *ProviderManager {
+	s := &ProviderManager{
 		providers: make(map[types.ProviderID]*providerLife),
 	}
 
@@ -48,7 +48,7 @@ func NewProviderScheduler() *ProviderScheduler {
 	return s
 }
 
-func (p *ProviderScheduler) AddProvider(id types.ProviderID, providerApi api.Provider) error {
+func (p *ProviderManager) AddProvider(id types.ProviderID, providerApi api.Provider) error {
 	p.lk.Lock()
 	p.lk.Unlock()
 
@@ -64,7 +64,7 @@ func (p *ProviderScheduler) AddProvider(id types.ProviderID, providerApi api.Pro
 	return nil
 }
 
-func (p *ProviderScheduler) Get(id types.ProviderID) (api.Provider, error) {
+func (p *ProviderManager) Get(id types.ProviderID) (api.Provider, error) {
 	p.lk.Lock()
 	defer p.lk.Unlock()
 
@@ -77,7 +77,7 @@ func (p *ProviderScheduler) Get(id types.ProviderID) (api.Provider, error) {
 	return provider, nil
 }
 
-func (p *ProviderScheduler) delProvider(id types.ProviderID) {
+func (p *ProviderManager) delProvider(id types.ProviderID) {
 	p.lk.Lock()
 	defer p.lk.Unlock()
 	if _, ok := p.providers[id]; ok {
@@ -86,7 +86,7 @@ func (p *ProviderScheduler) delProvider(id types.ProviderID) {
 	return
 }
 
-func (p *ProviderScheduler) watch() {
+func (p *ProviderManager) watch() {
 	heartbeatTimer := time.NewTicker(HeartbeatInterval)
 	defer heartbeatTimer.Stop()
 

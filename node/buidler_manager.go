@@ -46,7 +46,7 @@ func ConfigManager(c interface{}) Option {
 		ConfigCommon(&cfg.Common),
 		Override(new(*sqlx.DB), modules.NewManagerDB(cfg.DatabaseAddress)),
 		Override(new(*db.ManagerDB), db.NewManagerDB),
-		Override(new(*manager.ProviderScheduler), manager.NewProviderScheduler),
+		Override(new(*manager.ProviderManager), manager.NewProviderScheduler),
 		Override(new(dtypes.SetManagerConfigFunc), modules.NewSetManagerConfigFunc),
 		Override(new(dtypes.GetManagerConfigFunc), modules.NewGetManagerConfigFunc),
 	)
