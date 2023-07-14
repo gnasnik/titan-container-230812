@@ -4,6 +4,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"strings"
 	"time"
 )
 
@@ -39,20 +40,22 @@ const (
 )
 
 type Deployment struct {
-	ID               DeploymentID    `db:"id"`
-	Name             string          `db:"name"`
-	Owner            string          `db:"owner"`
-	State            DeploymentState `db:"state"`
-	Type             DeploymentType  `db:"type"`
-	Version          []byte          `db:"version"`
-	Balance          float64         `db:"balance"`
-	Cost             float64         `db:"cost"`
-	ProviderID       ProviderID      `db:"provider_id"`
-	Expiration       time.Time       `db:"expiration"`
-	CreatedAt        time.Time       `db:"created_at"`
-	UpdatedAt        time.Time       `db:"updated_at"`
-	ProviderExposeIP string          `db:"provider_expose_ip"`
-	Services         []*Service
+	ID       DeploymentID    `db:"id"`
+	Name     string          `db:"name"`
+	Owner    string          `db:"owner"`
+	State    DeploymentState `db:"state"`
+	Version  []byte          `db:"version"`
+	Services []*Service
+
+	// Internal
+	Type             DeploymentType `db:"type"`
+	Balance          float64        `db:"balance"`
+	Cost             float64        `db:"cost"`
+	ProviderID       ProviderID     `db:"provider_id"`
+	Expiration       time.Time      `db:"expiration"`
+	CreatedAt        time.Time      `db:"created_at"`
+	UpdatedAt        time.Time      `db:"updated_at"`
+	ProviderExposeIP string         `db:"provider_expose_ip"`
 }
 
 type ServiceState int
@@ -64,19 +67,21 @@ const (
 )
 
 type Service struct {
-	ID           int64        `db:"id"`
 	Image        string       `db:"image"`
 	Name         string       `db:"name"`
 	Port         int          `db:"port"`
 	ExposePort   int          `db:"expose_port"`
-	DeploymentID DeploymentID `db:"deployment_id"`
 	Env          Env          `db:"env"`
 	State        ServiceState `db:"state"`
 	ErrorMessage string       `db:"error_message"`
-	Arguments    []string     `db:"arguments"`
+	Arguments    Arguments    `db:"arguments"`
+	ComputeResources
+
+	// Internal
+	ID           int64        `db:"id"`
+	DeploymentID DeploymentID `db:"deployment_id"`
 	CreatedAt    time.Time    `db:"created_at"`
 	UpdatedAt    time.Time    `db:"updated_at"`
-	ComputeResources
 }
 
 type Env map[string]string
@@ -98,6 +103,39 @@ func (e Env) Scan(value interface{}) error {
 		return err
 	}
 	return nil
+}
+
+type Arguments []string
+
+func (a Arguments) Value() (driver.Value, error) {
+	return strings.Join(a, ","), nil
+}
+
+func (a Arguments) Scan(value interface{}) error {
+	b, ok := value.([]byte)
+	if !ok {
+		return errors.New("type assertion to []byte failed")
+	}
+	copy(a, strings.Split(string(b), ","))
+	return nil
+}
+
+func (s *Service) Apply(in *Service) {
+	if in.Name != "" {
+		s.Name = in.Name
+	}
+	if in.Port > 0 {
+		s.Port = in.Port
+	}
+	if in.ExposePort > 0 {
+		s.ExposePort = in.ExposePort
+	}
+	if in.State > 0 {
+		s.State = in.State
+	}
+	if in.ComputeResources != (ComputeResources{}) {
+		s.ComputeResources = in.ComputeResources
+	}
 }
 
 type GetDeploymentOption struct {

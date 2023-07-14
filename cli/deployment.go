@@ -40,6 +40,10 @@ var CreateDeployment = &cli.Command{
 			Name:  "name",
 			Usage: "deployment name",
 		},
+		&cli.IntFlag{
+			Name:  "port",
+			Usage: "deployment internal server port",
+		},
 		&cli.StringFlag{
 			Name:     "image",
 			Usage:    "deployment image",
@@ -74,13 +78,13 @@ var CreateDeployment = &cli.Command{
 			Services: []*types.Service{
 				{
 					Image: cctx.String("image"),
+					Port:  cctx.Int("port"),
 					ComputeResources: types.ComputeResources{
 						CPU:     cctx.Float64("cpu"),
 						Memory:  cctx.Int64("mem"),
 						Storage: cctx.Int64("storage"),
 					},
-					Env:       map[string]string{"hello": "test"},
-					Arguments: []string{"--test"},
+					Env: map[string]string{"hello": "test"},
 				},
 			},
 		}
@@ -153,7 +157,7 @@ var DeploymentList = &cli.Command{
 					"Memory":          units.BytesSize(float64(service.Memory * units.MiB)),
 					"Storage":         units.BytesSize(float64(service.Storage * units.MiB)),
 					"CreatedTime":     deployment.CreatedAt.Format(defaultDateTimeLayout),
-					"ExposeAddresses": fmt.Sprintf("%s:%d", deployment.ProviderExposeIP, service.Port),
+					"ExposeAddresses": fmt.Sprintf("%s:%d", deployment.ProviderExposeIP, service.ExposePort),
 				}
 				tw.Write(m)
 			}

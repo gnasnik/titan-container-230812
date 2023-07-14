@@ -86,9 +86,6 @@ func (m *Manager) CreateDeployment(ctx context.Context, deployment *types.Deploy
 	}
 
 	deployment.ID = types.DeploymentID(uuid.New().String())
-	for i := 0; i < len(deployment.Services); i++ {
-		deployment.Services[i].DeploymentID = deployment.ID
-	}
 	deployment.State = types.DeploymentStateActive
 	deployment.CreatedAt = time.Now()
 	deployment.UpdatedAt = time.Now()
@@ -98,10 +95,17 @@ func (m *Manager) CreateDeployment(ctx context.Context, deployment *types.Deploy
 		return err
 	}
 
-	//successDeployment, err := providerApi.GetDeployment(ctx, deployment.ID)
-	//if err != nil {
-	//	return err
-	//}
+	successDeployment, err := providerApi.GetDeployment(ctx, deployment.ID)
+	if err != nil {
+		return err
+	}
+
+	deployment.Services = successDeployment.Services
+	for _, service := range deployment.Services {
+		service.DeploymentID = deployment.ID
+		service.CreatedAt = time.Now()
+		service.UpdatedAt = time.Now()
+	}
 
 	err = m.DB.CreateDeployment(ctx, deployment)
 	if err != nil {
