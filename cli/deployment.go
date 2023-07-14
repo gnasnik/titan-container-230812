@@ -2,12 +2,13 @@ package cli
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/docker/go-units"
 	"github.com/gnasnik/titan-container/api/types"
 	"github.com/gnasnik/titan-container/lib/tablewriter"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli/v2"
-	"os"
 )
 
 var defaultDateTimeLayout = "2006-01-02 15:04:05"
@@ -79,7 +80,7 @@ var CreateDeployment = &cli.Command{
 						Storage: cctx.Int64("storage"),
 					},
 					Env:       map[string]string{"hello": "test"},
-					Arguments: "--test",
+					Arguments: []string{"--test"},
 				},
 			},
 		}

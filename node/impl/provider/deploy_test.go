@@ -19,7 +19,7 @@ func TestDeploy(t *testing.T) {
 	client, err := kube.NewClient(kubeconfig)
 	require.NoError(t, err)
 
-	service := types.Service{Image: "nginx:1.14.2", Port: 80, ComputeResources: types.ComputeResources{CPU: 0.1, Memory: 100, Storage: 100}}
+	service := types.Service{Image: "redis:latest", Port: 6379, ComputeResources: types.ComputeResources{CPU: 0.1, Memory: 100, Storage: 100}}
 	deploy := types.Deployment{
 		ID:       types.DeploymentID("123"),
 		Owner:    "test",
@@ -45,11 +45,7 @@ func TestDeleteDeploy(t *testing.T) {
 		Services: []*types.Service{},
 	}
 
-	k8sDeploy, err := ClusterDeploymentFromDeployment(&deploy)
-	require.NoError(t, err)
-
-	ns := builder.DidNS(k8sDeploy.DeploymentID())
-
+	ns := builder.DidNS(manifest.DeploymentID{ID: string(deploy.ID)})
 	err = client.DeleteNS(context.Background(), ns)
 	require.NoError(t, err)
 }
@@ -65,37 +61,20 @@ func TestMemory(t *testing.T) {
 	t.Logf("memory:%s", string(buf))
 }
 
-func TestListNode(t *testing.T) {
-	kubeconfig := "./test/config"
-	client, err := kube.NewClient(kubeconfig)
+func TestResourcesStatistics(t *testing.T) {
+	config := &config.ProviderCfg{KubeConfigPath: "./test/config", PublicIP: "192.168.0.132"}
+	manager, err := NewManager(config)
 	require.NoError(t, err)
 
-	nodeList, err := client.ListNodes(context.Background())
+	statistics, err := manager.GetStatistics(context.Background())
 	require.NoError(t, err)
 
-	statistics := &types.ResourcesStatistics{}
-	for _, node := range nodeList.Items {
-		buf, _ := json.Marshal(node)
-		t.Logf("buf:%s", string(buf))
-		// cpu, memory, storage := getResources(node.Status.Capacity)
-		// statistics.CPUCores.MaxCPUCores += cpu
-		// statistics.Memory.MaxMemory += memory
-		// statistics.Storage.MaxStorage += storage
-		// t.Logf("max cpu %d, memory %d storage %d", cpu, memory, storage)
-		// cpu, memory, storage = getResources(node.Status.Allocatable)
-		// statistics.CPUCores.Available += cpu
-		// statistics.Memory.Available += memory
-		// statistics.Storage.Available += storage
-		// t.Logf("Available cpu %d, memory %d storage %d", cpu, memory, storage)
-
-	}
-
-	t.Logf("statistics %#v", *statistics)
+	t.Logf("nodeResources %#v", *statistics)
 
 }
 
 func TestGetDeployment(t *testing.T) {
-	config := &config.ProviderCfg{KubeConfigPath: "./test/config"}
+	config := &config.ProviderCfg{KubeConfigPath: "./test/config", PublicIP: "192.168.0.132"}
 	manager, err := NewManager(config)
 	require.NoError(t, err)
 
@@ -106,4 +85,20 @@ func TestGetDeployment(t *testing.T) {
 		t.Logf("deployment:%#v", *service)
 	}
 
+	t.Logf("deployment:%#v", *deployment)
+
+}
+
+func TestListDeployment(t *testing.T) {
+	kubeconfig := "./test/config"
+	client, err := kube.NewClient(kubeconfig)
+	require.NoError(t, err)
+
+	deploymentList, err := client.ListDeployments(context.Background(), "ld795irmdp488enid0r1rtb7bknfg1t8qtn0scua6org4")
+	require.NoError(t, err)
+
+	for _, deployment := range deploymentList.Items {
+		buf, _ := json.Marshal(deployment.Status.Conditions)
+		t.Logf("deployment:%s", string(buf))
+	}
 }

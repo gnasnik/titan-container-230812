@@ -27,9 +27,10 @@ type ManagerCfg struct {
 type ProviderCfg struct {
 	Common
 	// used when 'ListenAddress' is unspecified. must be a valid duration recognized by golang's time.ParseDuration function
-	Timeout string
-	Owner   string
-	HostURI string
+	Timeout  string
+	Owner    string
+	HostURI  string
+	PublicIP string
 
 	KubeConfigPath string
 }

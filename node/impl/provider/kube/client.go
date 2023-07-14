@@ -9,6 +9,7 @@ import (
 	logging "github.com/ipfs/go-log/v2"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -20,9 +21,10 @@ import (
 type Client interface {
 	Deploy(ctx context.Context, deployment builder.IClusterDeployment) error
 	DeleteNS(ctx context.Context, ns string) error
-	ListNodes(ctx context.Context) (*corev1.NodeList, error)
+	FetchNodeResources(ctx context.Context) (map[string]*nodeResource, error)
 	ListServices(ctx context.Context, ns string) (*corev1.ServiceList, error)
 	ListDeployments(ctx context.Context, ns string) (*appsv1.DeploymentList, error)
+	GetNS(ctx context.Context, ns string) (*v1.Namespace, error)
 }
 
 type client struct {
@@ -168,9 +170,13 @@ func (c *client) DeleteNS(ctx context.Context, ns string) error {
 	return c.kc.CoreV1().Namespaces().Delete(ctx, ns, metav1.DeleteOptions{})
 }
 
-func (c *client) ListNodes(ctx context.Context) (*corev1.NodeList, error) {
-	return c.kc.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
+func (c *client) GetNS(ctx context.Context, ns string) (*v1.Namespace, error) {
+	return c.kc.CoreV1().Namespaces().Get(ctx, ns, metav1.GetOptions{})
 }
+
+// func (c *client) ListNodes(ctx context.Context) (*corev1.NodeList, error) {
+// 	return c.kc.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
+// }
 
 func (c *client) ListServices(ctx context.Context, ns string) (*corev1.ServiceList, error) {
 	return c.kc.CoreV1().Services(ns).List(ctx, metav1.ListOptions{})
@@ -178,4 +184,8 @@ func (c *client) ListServices(ctx context.Context, ns string) (*corev1.ServiceLi
 
 func (c *client) ListDeployments(ctx context.Context, ns string) (*appsv1.DeploymentList, error) {
 	return c.kc.AppsV1().Deployments(ns).List(ctx, metav1.ListOptions{})
+}
+
+func (c *client) ListPods(ctx context.Context, ns string) (*corev1.PodList, error) {
+	return c.kc.CoreV1().Pods(ns).List(ctx, metav1.ListOptions{})
 }

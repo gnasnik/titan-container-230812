@@ -49,10 +49,10 @@ type Memory struct {
 }
 
 type CPUCores struct {
-	MaxCPUCores uint64
-	Available   uint64
-	Active      uint64
-	Pending     uint64
+	MaxCPUCores float64
+	Available   float64
+	Active      float64
+	Pending     float64
 }
 
 type Storage struct {

@@ -24,7 +24,8 @@ type Manager interface {
 }
 
 type manager struct {
-	kc kube.Client
+	kc          kube.Client
+	providerCfg *config.ProviderCfg
 }
 
 var _ Manager = (*manager)(nil)
@@ -34,7 +35,7 @@ func NewManager(config *config.ProviderCfg) (Manager, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &manager{kc: client}, nil
+	return &manager{kc: client, providerCfg: config}, nil
 }
 
 func getResources(resources corev1.ResourceList) (uint64, uint64, uint64) {
@@ -45,22 +46,28 @@ func getResources(resources corev1.ResourceList) (uint64, uint64, uint64) {
 }
 
 func (m *manager) GetStatistics(ctx context.Context) (*types.ResourcesStatistics, error) {
-	nodeList, err := m.kc.ListNodes(ctx)
+	nodeResources, err := m.kc.FetchNodeResources(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	statistics := &types.ResourcesStatistics{}
-	for _, node := range nodeList.Items {
-		cpu, memory, storage := getResources(node.Status.Capacity)
-		statistics.CPUCores.MaxCPUCores += cpu
-		statistics.Memory.MaxMemory += memory
-		statistics.Storage.MaxStorage += storage
+	if nodeResources == nil {
+		return nil, fmt.Errorf("nodes resources do not exist")
+	}
 
-		cpu, memory, storage = getResources(node.Status.Allocatable)
-		statistics.CPUCores.Available += cpu
-		statistics.Memory.Available += memory
-		statistics.Storage.Available += storage
+	statistics := &types.ResourcesStatistics{}
+	for _, node := range nodeResources {
+		statistics.CPUCores.MaxCPUCores += node.CPU.Capacity.AsApproximateFloat64()
+		statistics.CPUCores.Available += node.CPU.Allocatable.AsApproximateFloat64()
+		statistics.CPUCores.Active += node.CPU.Allocated.AsApproximateFloat64()
+
+		statistics.Memory.MaxMemory += uint64(node.Memory.Capacity.AsApproximateFloat64())
+		statistics.Memory.Available += uint64(node.Memory.Allocatable.AsApproximateFloat64())
+		statistics.Memory.Active += uint64(node.Memory.Allocated.AsApproximateFloat64())
+
+		statistics.Storage.MaxStorage += uint64(node.EphemeralStorage.Capacity.AsApproximateFloat64())
+		statistics.Storage.Available += uint64(node.EphemeralStorage.Allocatable.AsApproximateFloat64())
+		statistics.Storage.Active += uint64(node.EphemeralStorage.Allocated.AsApproximateFloat64())
 	}
 	return statistics, nil
 }
@@ -72,6 +79,18 @@ func (m *manager) CreateDeployment(ctx context.Context, deployment *types.Deploy
 		return err
 	}
 
+	did := k8sDeployment.DeploymentID()
+	ns := builder.DidNS(did)
+
+	namespace, err := m.kc.GetNS(ctx, ns)
+	if err != nil {
+		return err
+	}
+
+	if namespace != nil {
+		return fmt.Errorf("deployment %s already exist, you can update it", deployment.ID)
+	}
+
 	ctx = context.WithValue(ctx, builder.SettingsKey, builder.NewDefaultSettings())
 	return m.kc.Deploy(ctx, k8sDeployment)
 }
@@ -81,6 +100,18 @@ func (m *manager) UpdateDeployment(ctx context.Context, deployment *types.Deploy
 	if err != nil {
 		log.Errorf("UpdateDeployment %s", err.Error())
 		return err
+	}
+
+	did := k8sDeployment.DeploymentID()
+	ns := builder.DidNS(did)
+
+	namespace, err := m.kc.GetNS(ctx, ns)
+	if err != nil {
+		return err
+	}
+
+	if namespace == nil {
+		return fmt.Errorf("deployment %s do not exist, please create it first", deployment.ID)
 	}
 
 	ctx = context.WithValue(ctx, builder.SettingsKey, builder.NewDefaultSettings())
@@ -99,6 +130,7 @@ func (m *manager) CloseDeployment(ctx context.Context, deployment *types.Deploym
 	if len(ns) == 0 {
 		return fmt.Errorf("can not get ns from deployment id %s and owner %s", deployment.ID, deployment.Owner)
 	}
+
 	return m.kc.DeleteNS(ctx, ns)
 }
 
@@ -127,12 +159,11 @@ func (m *manager) GetDeployment(ctx context.Context, id types.DeploymentID) (*ty
 	}
 
 	for i := range services {
-		image := services[i].Image
-		key := imageToServiceName(image)
-		if port, ok := portMap[key]; ok {
+		name := services[i].Name
+		if port, ok := portMap[name]; ok {
 			services[i].ExposePort = port
 		}
 	}
 
-	return &types.Deployment{ID: id, Services: services}, nil
+	return &types.Deployment{ID: id, Services: services, ProviderExposeIP: m.providerCfg.PublicIP}, nil
 }

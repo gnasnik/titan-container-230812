@@ -60,6 +60,7 @@ type ServiceState int
 const (
 	ServiceStateNormal ServiceState = iota + 1
 	ServiceStateError
+	ServiceStateUnknown
 )
 
 type Service struct {
@@ -72,7 +73,7 @@ type Service struct {
 	Env          Env          `db:"env"`
 	State        ServiceState `db:"state"`
 	ErrorMessage string       `db:"error_message"`
-	Arguments    string       `db:"arguments"`
+	Arguments    []string     `db:"arguments"`
 	CreatedAt    time.Time    `db:"created_at"`
 	UpdatedAt    time.Time    `db:"updated_at"`
 	ComputeResources

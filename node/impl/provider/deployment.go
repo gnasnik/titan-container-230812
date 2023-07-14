@@ -2,11 +2,13 @@ package provider
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/gnasnik/titan-container/api/types"
 	"github.com/gnasnik/titan-container/node/impl/provider/kube/builder"
 	"github.com/gnasnik/titan-container/node/impl/provider/kube/manifest"
+	"github.com/google/uuid"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -64,6 +66,8 @@ func serviceToManifestService(service *types.Service) (manifest.Service, error) 
 	s := manifest.Service{
 		Name:      name,
 		Image:     service.Image,
+		Args:      service.Arguments,
+		Env:       envToManifestEnv(service.Env),
 		Resources: &resource,
 		Expose:    make([]*manifest.ServiceExpose, 0),
 		Count:     podReplicas,
@@ -76,12 +80,26 @@ func serviceToManifestService(service *types.Service) (manifest.Service, error) 
 	return s, nil
 }
 
+func envToManifestEnv(serviceEnv types.Env) []string {
+	envs := make([]string, 0, len(serviceEnv))
+	for k, v := range serviceEnv {
+		env := fmt.Sprintf("%s=%s", k, v)
+		envs = append(envs, env)
+	}
+	return envs
+}
+
 func imageToServiceName(image string) string {
+	serviceName := image
 	names := strings.Split(image, ":")
 	if len(names) > 0 {
-		return names[0]
+		serviceName = names[0]
 	}
-	return image
+
+	uuidString := uuid.NewString()
+	uuidString = strings.Replace(uuidString, "-", "", -1)
+
+	return fmt.Sprintf("%s-%s", serviceName, uuidString)
 }
 
 func resourceToManifestResource(resource *types.ComputeResources) manifest.ResourceUnits {
@@ -115,13 +133,26 @@ func k8sDeploymentToService(deployment *appsv1.Deployment) (*types.Service, erro
 	}
 
 	container := deployment.Spec.Template.Spec.Containers[0]
-	service := &types.Service{Image: container.Image}
+	service := &types.Service{Image: container.Image, Name: container.Name}
 	service.CPU = container.Resources.Limits.Cpu().AsApproximateFloat64()
 	service.Memory = container.Resources.Limits.Memory().Value() / 1000000
 	service.Storage = int64(container.Resources.Limits.StorageEphemeral().AsApproximateFloat64()) / 1000000
 	if len(container.Ports) > 0 {
 		service.Port = int(container.Ports[0].ContainerPort)
 	}
+
+	if len(deployment.Status.Conditions) == 0 {
+		return nil, fmt.Errorf("deployment conditions can not empty")
+	}
+
+	conditions := deployment.Status.Conditions
+	sort.Slice(conditions, func(i, j int) bool {
+		return conditions[i].LastUpdateTime.Before(&conditions[j].LastUpdateTime)
+	})
+
+	lastCondition := conditions[len(conditions)-1]
+	service.State = getConditionStatus(lastCondition)
+	service.ErrorMessage = lastCondition.Message
 
 	return service, nil
 }
@@ -132,7 +163,8 @@ func k8sServiceToPortMap(serviceList *corev1.ServiceList) (map[string]int, error
 		if len(service.Spec.Ports) > 0 {
 			servicePort := service.Spec.Ports[0]
 			if servicePort.NodePort != 0 {
-				portMap[service.Name] = int(servicePort.NodePort)
+				serviceName := strings.TrimSuffix(service.Name, builder.SuffixForNodePortServiceName)
+				portMap[serviceName] = int(servicePort.NodePort)
 			} else {
 				portMap[service.Name] = int(servicePort.Port)
 			}
@@ -140,4 +172,14 @@ func k8sServiceToPortMap(serviceList *corev1.ServiceList) (map[string]int, error
 
 	}
 	return portMap, nil
+}
+
+func getConditionStatus(condition appsv1.DeploymentCondition) types.ServiceState {
+	switch condition.Status {
+	case corev1.ConditionTrue:
+		return types.ServiceStateNormal
+	case corev1.ConditionFalse:
+		return types.ServiceStateError
+	}
+	return types.ServiceStateUnknown
 }
