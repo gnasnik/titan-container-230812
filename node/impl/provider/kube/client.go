@@ -174,10 +174,6 @@ func (c *client) GetNS(ctx context.Context, ns string) (*v1.Namespace, error) {
 	return c.kc.CoreV1().Namespaces().Get(ctx, ns, metav1.GetOptions{})
 }
 
-// func (c *client) ListNodes(ctx context.Context) (*corev1.NodeList, error) {
-// 	return c.kc.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
-// }
-
 func (c *client) ListServices(ctx context.Context, ns string) (*corev1.ServiceList, error) {
 	return c.kc.CoreV1().Services(ns).List(ctx, metav1.ListOptions{})
 }

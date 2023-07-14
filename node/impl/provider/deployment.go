@@ -141,18 +141,17 @@ func k8sDeploymentToService(deployment *appsv1.Deployment) (*types.Service, erro
 		service.Port = int(container.Ports[0].ContainerPort)
 	}
 
-	if len(deployment.Status.Conditions) == 0 {
-		return nil, fmt.Errorf("deployment conditions can not empty")
+	if len(deployment.Status.Conditions) > 0 {
+		conditions := deployment.Status.Conditions
+		sort.Slice(conditions, func(i, j int) bool {
+			return conditions[i].LastUpdateTime.Before(&conditions[j].LastUpdateTime)
+		})
+
+		lastCondition := conditions[len(conditions)-1]
+		service.State = getConditionStatus(lastCondition)
+		service.ErrorMessage = lastCondition.Message
+
 	}
-
-	conditions := deployment.Status.Conditions
-	sort.Slice(conditions, func(i, j int) bool {
-		return conditions[i].LastUpdateTime.Before(&conditions[j].LastUpdateTime)
-	})
-
-	lastCondition := conditions[len(conditions)-1]
-	service.State = getConditionStatus(lastCondition)
-	service.ErrorMessage = lastCondition.Message
 
 	return service, nil
 }

@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestDeploy(t *testing.T) {
+func TestCreateDeploy(t *testing.T) {
 	config := &config.ProviderCfg{KubeConfigPath: "./test/config", PublicIP: "192.168.0.132"}
 	manager, err := NewManager(config)
 	require.NoError(t, err)
@@ -26,6 +26,22 @@ func TestDeploy(t *testing.T) {
 	}
 
 	err = manager.CreateDeployment(context.Background(), &deploy)
+	require.NoError(t, err)
+}
+
+func TestUplodateDeploy(t *testing.T) {
+	config := &config.ProviderCfg{KubeConfigPath: "./test/config", PublicIP: "192.168.0.132"}
+	manager, err := NewManager(config)
+	require.NoError(t, err)
+
+	service := types.Service{Image: "test", Port: 6379, ComputeResources: types.ComputeResources{CPU: 0.1, Memory: 100, Storage: 100}}
+	deploy := types.Deployment{
+		ID:       types.DeploymentID("ccc"),
+		Owner:    "test",
+		Services: []*types.Service{&service},
+	}
+
+	err = manager.UpdateDeployment(context.Background(), &deploy)
 	require.NoError(t, err)
 }
 
@@ -62,7 +78,7 @@ func TestGetDeployment(t *testing.T) {
 	manager, err := NewManager(config)
 	require.NoError(t, err)
 
-	deployment, err := manager.GetDeployment(context.Background(), types.DeploymentID("5555"))
+	deployment, err := manager.GetDeployment(context.Background(), types.DeploymentID(""))
 	require.NoError(t, err)
 
 	for _, service := range deployment.Services {
@@ -78,9 +94,13 @@ func TestListDeployment(t *testing.T) {
 	client, err := kube.NewClient(kubeconfig)
 	require.NoError(t, err)
 
-	deploymentList, err := client.ListDeployments(context.Background(), "ld795irmdp488enid0r1rtb7bknfg1t8qtn0scua6org4")
+	deploymentList, err := client.ListDeployments(context.Background(), "bbbbb")
 	require.NoError(t, err)
 
+	if deploymentList == nil {
+		t.Logf("deploymentList == nil")
+	}
+	t.Logf("deployment:%#v", *deploymentList)
 	for _, deployment := range deploymentList.Items {
 		buf, _ := json.Marshal(deployment.Status.Conditions)
 		t.Logf("deployment:%s", string(buf))

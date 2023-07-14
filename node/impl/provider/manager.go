@@ -82,17 +82,13 @@ func (m *manager) UpdateDeployment(ctx context.Context, deployment *types.Deploy
 		return err
 	}
 
-	did := k8sDeployment.DeploymentID()
-	ns := builder.DidNS(did)
+	// did := k8sDeployment.DeploymentID()
+	// ns := builder.DidNS(did)
 
-	namespace, err := m.kc.GetNS(ctx, ns)
-	if err != nil {
-		return err
-	}
-
-	if namespace == nil {
-		return fmt.Errorf("deployment %s do not exist, please create it first", deployment.ID)
-	}
+	// _, err := m.kc.GetNS(ctx, ns)
+	// if err != nil {
+	// 	return fmt.Errorf("deployment %s do not exist or %s", deployment.ID, err.Error())
+	// }
 
 	ctx = context.WithValue(ctx, builder.SettingsKey, builder.NewDefaultSettings())
 	return m.kc.Deploy(ctx, k8sDeployment)
