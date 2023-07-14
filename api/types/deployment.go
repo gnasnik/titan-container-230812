@@ -59,6 +59,7 @@ type Service struct {
 	ID           int64        `db:"id"`
 	Image        string       `db:"image"`
 	Port         int          `db:"port"`
+	ExposePort   int          `db:"expose_port"`
 	DeploymentID DeploymentID `db:"deployment_id"`
 	Env          Env          `db:"env"`
 	Arguments    string       `db:"arguments"`

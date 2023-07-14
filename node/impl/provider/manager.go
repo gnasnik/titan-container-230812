@@ -8,6 +8,7 @@ import (
 	"github.com/gnasnik/titan-container/node/config"
 	"github.com/gnasnik/titan-container/node/impl/provider/kube"
 	"github.com/gnasnik/titan-container/node/impl/provider/kube/builder"
+	"github.com/gnasnik/titan-container/node/impl/provider/kube/manifest"
 	logging "github.com/ipfs/go-log/v2"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -102,5 +103,36 @@ func (m *manager) CloseDeployment(ctx context.Context, deployment *types.Deploym
 }
 
 func (m *manager) GetDeployment(ctx context.Context, id types.DeploymentID) (*types.Deployment, error) {
-	return nil, nil
+	deploymentID := manifest.DeploymentID{ID: string(id)}
+	ns := builder.DidNS(deploymentID)
+
+	deploymentList, err := m.kc.ListDeployments(ctx, ns)
+	if err != nil {
+		return nil, err
+	}
+
+	services, err := k8sDeploymentsToServices(deploymentList)
+	if err != nil {
+		return nil, err
+	}
+
+	serviceList, err := m.kc.ListServices(ctx, ns)
+	if err != nil {
+		return nil, err
+	}
+
+	portMap, err := k8sServiceToPortMap(serviceList)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range services {
+		image := services[i].Image
+		key := imageToServiceName(image)
+		if port, ok := portMap[key]; ok {
+			services[i].ExposePort = port
+		}
+	}
+
+	return &types.Deployment{ID: id, Services: services}, nil
 }

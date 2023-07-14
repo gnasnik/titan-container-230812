@@ -7,6 +7,7 @@ import (
 
 	"github.com/gnasnik/titan-container/node/impl/provider/kube/builder"
 	logging "github.com/ipfs/go-log/v2"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -20,6 +21,8 @@ type Client interface {
 	Deploy(ctx context.Context, deployment builder.IClusterDeployment) error
 	DeleteNS(ctx context.Context, ns string) error
 	ListNodes(ctx context.Context) (*corev1.NodeList, error)
+	ListServices(ctx context.Context, ns string) (*corev1.ServiceList, error)
+	ListDeployments(ctx context.Context, ns string) (*appsv1.DeploymentList, error)
 }
 
 type client struct {
@@ -167,4 +170,12 @@ func (c *client) DeleteNS(ctx context.Context, ns string) error {
 
 func (c *client) ListNodes(ctx context.Context) (*corev1.NodeList, error) {
 	return c.kc.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
+}
+
+func (c *client) ListServices(ctx context.Context, ns string) (*corev1.ServiceList, error) {
+	return c.kc.CoreV1().Services(ns).List(ctx, metav1.ListOptions{})
+}
+
+func (c *client) ListDeployments(ctx context.Context, ns string) (*appsv1.DeploymentList, error) {
+	return c.kc.AppsV1().Deployments(ns).List(ctx, metav1.ListOptions{})
 }

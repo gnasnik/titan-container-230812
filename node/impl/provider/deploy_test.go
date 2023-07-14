@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/gnasnik/titan-container/api/types"
+	"github.com/gnasnik/titan-container/node/config"
 	"github.com/gnasnik/titan-container/node/impl/provider/kube"
 	"github.com/gnasnik/titan-container/node/impl/provider/kube/builder"
 	"github.com/gnasnik/titan-container/node/impl/provider/kube/manifest"
@@ -90,5 +91,19 @@ func TestListNode(t *testing.T) {
 	}
 
 	t.Logf("statistics %#v", *statistics)
+
+}
+
+func TestGetDeployment(t *testing.T) {
+	config := &config.ProviderCfg{KubeConfigPath: "./test/config"}
+	manager, err := NewManager(config)
+	require.NoError(t, err)
+
+	deployment, err := manager.GetDeployment(context.Background(), types.DeploymentID("123"))
+	require.NoError(t, err)
+
+	for _, service := range deployment.Services {
+		t.Logf("deployment:%#v", *service)
+	}
 
 }

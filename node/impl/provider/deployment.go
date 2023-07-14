@@ -7,6 +7,8 @@ import (
 	"github.com/gnasnik/titan-container/api/types"
 	"github.com/gnasnik/titan-container/node/impl/provider/kube/builder"
 	"github.com/gnasnik/titan-container/node/impl/provider/kube/manifest"
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 const (
@@ -91,4 +93,51 @@ func exposeFromPort(port int) *manifest.ServiceExpose {
 		return nil
 	}
 	return &manifest.ServiceExpose{Port: uint32(port), ExternalPort: uint32(port), Proto: manifest.TCP, Global: true}
+}
+
+func k8sDeploymentsToServices(deploymentList *appsv1.DeploymentList) ([]*types.Service, error) {
+	services := make([]*types.Service, 0, len(deploymentList.Items))
+
+	for _, deployment := range deploymentList.Items {
+		s, err := k8sDeploymentToService(&deployment)
+		if err != nil {
+			return nil, err
+		}
+		services = append(services, s)
+	}
+
+	return services, nil
+}
+
+func k8sDeploymentToService(deployment *appsv1.Deployment) (*types.Service, error) {
+	if len(deployment.Spec.Template.Spec.Containers) == 0 {
+		return nil, fmt.Errorf("deployment container can not empty")
+	}
+
+	container := deployment.Spec.Template.Spec.Containers[0]
+	service := &types.Service{Image: container.Image}
+	service.CPU = container.Resources.Limits.Cpu().AsApproximateFloat64()
+	service.Memory = container.Resources.Limits.Memory().Value() / 1000000
+	service.Storage = int64(container.Resources.Limits.StorageEphemeral().AsApproximateFloat64()) / 1000000
+	if len(container.Ports) > 0 {
+		service.Port = int(container.Ports[0].ContainerPort)
+	}
+
+	return service, nil
+}
+
+func k8sServiceToPortMap(serviceList *corev1.ServiceList) (map[string]int, error) {
+	portMap := make(map[string]int)
+	for _, service := range serviceList.Items {
+		if len(service.Spec.Ports) > 0 {
+			servicePort := service.Spec.Ports[0]
+			if servicePort.NodePort != 0 {
+				portMap[service.Name] = int(servicePort.NodePort)
+			} else {
+				portMap[service.Name] = int(servicePort.Port)
+			}
+		}
+
+	}
+	return portMap, nil
 }
