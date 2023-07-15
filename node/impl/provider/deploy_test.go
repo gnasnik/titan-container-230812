@@ -18,9 +18,9 @@ func TestCreateDeploy(t *testing.T) {
 	manager, err := NewManager(config)
 	require.NoError(t, err)
 
-	service := types.Service{Image: "test", Port: 6379, ComputeResources: types.ComputeResources{CPU: 0.1, Memory: 100, Storage: 100}}
+	service := types.Service{Image: "redis:latest", Port: 6379, ComputeResources: types.ComputeResources{CPU: 0.1, Memory: 100, Storage: 100}}
 	deploy := types.Deployment{
-		ID:       types.DeploymentID("ccc"),
+		ID:       types.DeploymentID("4444"),
 		Owner:    "test",
 		Services: []*types.Service{&service},
 	}
@@ -78,7 +78,7 @@ func TestGetDeployment(t *testing.T) {
 	manager, err := NewManager(config)
 	require.NoError(t, err)
 
-	deployment, err := manager.GetDeployment(context.Background(), types.DeploymentID(""))
+	deployment, err := manager.GetDeployment(context.Background(), types.DeploymentID("e357dfaa-fda4-46a3-aa04-4936643b995c"))
 	require.NoError(t, err)
 
 	for _, service := range deployment.Services {

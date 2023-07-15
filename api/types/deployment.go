@@ -61,9 +61,9 @@ type Deployment struct {
 type ServiceState int
 
 const (
-	ServiceStateNormal ServiceState = iota + 1
+	ServiceStateUnknown ServiceState = iota
+	ServiceStateNormal
 	ServiceStateError
-	ServiceStateUnknown
 )
 
 type Service struct {

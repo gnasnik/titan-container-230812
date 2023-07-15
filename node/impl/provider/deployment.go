@@ -149,7 +149,9 @@ func k8sDeploymentToService(deployment *appsv1.Deployment) (*types.Service, erro
 
 		lastCondition := conditions[len(conditions)-1]
 		service.State = getConditionStatus(lastCondition)
-		service.ErrorMessage = lastCondition.Message
+		if service.State != types.ServiceStateNormal {
+			service.ErrorMessage = lastCondition.Message
+		}
 
 	}
 

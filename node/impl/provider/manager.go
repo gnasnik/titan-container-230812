@@ -71,6 +71,18 @@ func (m *manager) CreateDeployment(ctx context.Context, deployment *types.Deploy
 		return err
 	}
 
+	did := k8sDeployment.DeploymentID()
+	ns := builder.DidNS(did)
+
+	deploymentList, err := m.kc.ListDeployments(context.Background(), ns)
+	if err != nil {
+		return err
+	}
+
+	if deploymentList != nil && len(deploymentList.Items) > 0 {
+		return fmt.Errorf("deployment %s already exist", deployment.ID)
+	}
+
 	ctx = context.WithValue(ctx, builder.SettingsKey, builder.NewDefaultSettings())
 	return m.kc.Deploy(ctx, k8sDeployment)
 }
@@ -82,13 +94,17 @@ func (m *manager) UpdateDeployment(ctx context.Context, deployment *types.Deploy
 		return err
 	}
 
-	// did := k8sDeployment.DeploymentID()
-	// ns := builder.DidNS(did)
+	did := k8sDeployment.DeploymentID()
+	ns := builder.DidNS(did)
 
-	// _, err := m.kc.GetNS(ctx, ns)
-	// if err != nil {
-	// 	return fmt.Errorf("deployment %s do not exist or %s", deployment.ID, err.Error())
-	// }
+	deploymentList, err := m.kc.ListDeployments(context.Background(), ns)
+	if err != nil {
+		return err
+	}
+
+	if deploymentList == nil || len(deploymentList.Items) == 0 {
+		return fmt.Errorf("deployment %s do not exist", deployment.ID)
+	}
 
 	ctx = context.WithValue(ctx, builder.SettingsKey, builder.NewDefaultSettings())
 	return m.kc.Deploy(ctx, k8sDeployment)
