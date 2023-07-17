@@ -129,7 +129,7 @@ var DeploymentList = &cli.Command{
 
 		tw := tablewriter.New(
 			tablewriter.Col("ID"),
-			tablewriter.Col("Name"),
+			//tablewriter.Col("Name"),
 			tablewriter.Col("Image"),
 			tablewriter.Col("State"),
 			tablewriter.Col("TotalReplicas"),
@@ -161,8 +161,8 @@ var DeploymentList = &cli.Command{
 		for _, deployment := range deployments {
 			for _, service := range deployment.Services {
 				m := map[string]interface{}{
-					"ID":                deployment.ID,
-					"Name":              deployment.Name,
+					"ID": deployment.ID,
+					//"Name":              deployment.Name,
 					"Image":             service.Image,
 					"State":             types.DeploymentStateString(deployment.State),
 					"TotalReplicas":     service.Status.TotalReplicas,
@@ -173,7 +173,7 @@ var DeploymentList = &cli.Command{
 					"Storage":           units.BytesSize(float64(service.Storage * units.MiB)),
 					"CreatedTime":       deployment.CreatedAt.Format(defaultDateTimeLayout),
 					//"Error":         service.ErrorMessage,
-					"ExposeAddress": fmt.Sprintf("%s:%d", deployment.ProviderExposeIP, service.ExposePort),
+					"ExposeAddress": fmt.Sprintf("%s:%d->%d", deployment.ProviderExposeIP, service.Port, service.ExposePort),
 				}
 				tw.Write(m)
 			}
@@ -284,7 +284,7 @@ var StatusDeployment = &cli.Command{
 
 		if cctx.Bool("log") {
 			fmt.Printf("--------\nLogs:\n")
-			
+
 			serviceLogs, err := api.GetLogs(ctx, deployment)
 			if err != nil {
 				return err
