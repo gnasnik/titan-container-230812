@@ -13,6 +13,8 @@ type Provider interface {
 	CreateDeployment(ctx context.Context, deployment *types.Deployment) error            //perm:admin
 	UpdateDeployment(ctx context.Context, deployment *types.Deployment) error            //perm:admin
 	CloseDeployment(ctx context.Context, deployment *types.Deployment) error             //perm:admin
+	GetLogs(ctx context.Context, id types.DeploymentID) ([]*types.ServiceLog, error)     //perm:read
+	GetEvents(ctx context.Context, id types.DeploymentID) ([]*types.ServiceEvent, error) //perm:read
 
 	Version(context.Context) (Version, error)   //perm:admin
 	Session(context.Context) (uuid.UUID, error) //perm:admin

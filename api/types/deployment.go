@@ -58,23 +58,21 @@ type Deployment struct {
 	ProviderExposeIP string         `db:"provider_expose_ip"`
 }
 
-type ServiceState int
-
-const (
-	ServiceStateUnknown ServiceState = iota
-	ServiceStateNormal
-	ServiceStateError
-)
+type ReplicasStatus struct {
+	TotalReplicas     int
+	ReadyReplicas     int
+	AvailableReplicas int
+}
 
 type Service struct {
-	Image        string       `db:"image"`
-	Name         string       `db:"name"`
-	Port         int          `db:"port"`
-	ExposePort   int          `db:"expose_port"`
-	Env          Env          `db:"env"`
-	State        ServiceState `db:"state"`
-	ErrorMessage string       `db:"error_message"`
-	Arguments    Arguments    `db:"arguments"`
+	Image        string         `db:"image"`
+	Name         string         `db:"name"`
+	Port         int            `db:"port"`
+	ExposePort   int            `db:"expose_port"`
+	Env          Env            `db:"env"`
+	Status       ReplicasStatus `db:"status"`
+	ErrorMessage string         `db:"error_message"`
+	Arguments    Arguments      `db:"arguments"`
 	ComputeResources
 
 	// Internal
@@ -130,8 +128,8 @@ func (s *Service) Apply(in *Service) {
 	if in.ExposePort > 0 {
 		s.ExposePort = in.ExposePort
 	}
-	if in.State > 0 {
-		s.State = in.State
+	if in.Status != (ReplicasStatus{}) {
+		s.Status = in.Status
 	}
 	if in.ComputeResources != (ComputeResources{}) {
 		s.ComputeResources = in.ComputeResources

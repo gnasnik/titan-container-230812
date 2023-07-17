@@ -3,6 +3,7 @@ package kube
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/gnasnik/titan-container/node/impl/provider/kube/builder"
@@ -20,11 +21,14 @@ import (
 
 type Client interface {
 	Deploy(ctx context.Context, deployment builder.IClusterDeployment) error
+	GetNS(ctx context.Context, ns string) (*v1.Namespace, error)
 	DeleteNS(ctx context.Context, ns string) error
 	FetchNodeResources(ctx context.Context) (map[string]*nodeResource, error)
-	ListServices(ctx context.Context, ns string) (*corev1.ServiceList, error)
 	ListDeployments(ctx context.Context, ns string) (*appsv1.DeploymentList, error)
-	GetNS(ctx context.Context, ns string) (*v1.Namespace, error)
+	ListServices(ctx context.Context, ns string) (*corev1.ServiceList, error)
+	ListPods(ctx context.Context, ns string, opts metav1.ListOptions) (*corev1.PodList, error)
+	PodLogs(ctx context.Context, ns string, podName string) (io.ReadCloser, error)
+	Events(ctx context.Context, ns string, opts metav1.ListOptions) (*corev1.EventList, error)
 }
 
 type client struct {
@@ -182,6 +186,14 @@ func (c *client) ListDeployments(ctx context.Context, ns string) (*appsv1.Deploy
 	return c.kc.AppsV1().Deployments(ns).List(ctx, metav1.ListOptions{})
 }
 
-func (c *client) ListPods(ctx context.Context, ns string) (*corev1.PodList, error) {
-	return c.kc.CoreV1().Pods(ns).List(ctx, metav1.ListOptions{})
+func (c *client) ListPods(ctx context.Context, ns string, opts metav1.ListOptions) (*corev1.PodList, error) {
+	return c.kc.CoreV1().Pods(ns).List(ctx, opts)
+}
+
+func (c *client) PodLogs(ctx context.Context, ns string, podName string) (io.ReadCloser, error) {
+	return c.kc.CoreV1().Pods(ns).GetLogs(podName, &corev1.PodLogOptions{}).Stream(context.Background())
+}
+
+func (c *client) Events(ctx context.Context, ns string, opts metav1.ListOptions) (*corev1.EventList, error) {
+	return c.kc.CoreV1().Events(ns).List(ctx, opts)
 }

@@ -75,6 +75,10 @@ type ProviderStruct struct {
 
 		GetDeployment func(p0 context.Context, p1 types.DeploymentID) (*types.Deployment, error) `perm:"read"`
 
+		GetEvents func(p0 context.Context, p1 types.DeploymentID) ([]*types.ServiceEvent, error) `perm:"read"`
+
+		GetLogs func(p0 context.Context, p1 types.DeploymentID) ([]*types.ServiceLog, error) `perm:"read"`
+
 		GetStatistics func(p0 context.Context) (*types.ResourcesStatistics, error) `perm:"read"`
 
 		Session func(p0 context.Context) (uuid.UUID, error) `perm:"admin"`
@@ -317,6 +321,28 @@ func (s *ProviderStruct) GetDeployment(p0 context.Context, p1 types.DeploymentID
 
 func (s *ProviderStub) GetDeployment(p0 context.Context, p1 types.DeploymentID) (*types.Deployment, error) {
 	return nil, ErrNotSupported
+}
+
+func (s *ProviderStruct) GetEvents(p0 context.Context, p1 types.DeploymentID) ([]*types.ServiceEvent, error) {
+	if s.Internal.GetEvents == nil {
+		return *new([]*types.ServiceEvent), ErrNotSupported
+	}
+	return s.Internal.GetEvents(p0, p1)
+}
+
+func (s *ProviderStub) GetEvents(p0 context.Context, p1 types.DeploymentID) ([]*types.ServiceEvent, error) {
+	return *new([]*types.ServiceEvent), ErrNotSupported
+}
+
+func (s *ProviderStruct) GetLogs(p0 context.Context, p1 types.DeploymentID) ([]*types.ServiceLog, error) {
+	if s.Internal.GetLogs == nil {
+		return *new([]*types.ServiceLog), ErrNotSupported
+	}
+	return s.Internal.GetLogs(p0, p1)
+}
+
+func (s *ProviderStub) GetLogs(p0 context.Context, p1 types.DeploymentID) ([]*types.ServiceLog, error) {
+	return *new([]*types.ServiceLog), ErrNotSupported
 }
 
 func (s *ProviderStruct) GetStatistics(p0 context.Context) (*types.ResourcesStatistics, error) {

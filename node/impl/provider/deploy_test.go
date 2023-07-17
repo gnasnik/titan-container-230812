@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/gnasnik/titan-container/api/types"
@@ -18,9 +19,9 @@ func TestCreateDeploy(t *testing.T) {
 	manager, err := NewManager(config)
 	require.NoError(t, err)
 
-	service := types.Service{Image: "redis:latest", Port: 6379, ComputeResources: types.ComputeResources{CPU: 0.1, Memory: 100, Storage: 100}}
+	service := types.Service{Image: "test", Port: 6379, ComputeResources: types.ComputeResources{CPU: 0.1, Memory: 100, Storage: 100}}
 	deploy := types.Deployment{
-		ID:       types.DeploymentID("4444"),
+		ID:       types.DeploymentID("2222"),
 		Owner:    "test",
 		Services: []*types.Service{&service},
 	}
@@ -51,7 +52,7 @@ func TestDeleteDeploy(t *testing.T) {
 	require.NoError(t, err)
 
 	deploy := types.Deployment{
-		ID:       types.DeploymentID("ccc"),
+		ID:       types.DeploymentID("4444"),
 		Owner:    "test",
 		Services: []*types.Service{},
 	}
@@ -78,7 +79,7 @@ func TestGetDeployment(t *testing.T) {
 	manager, err := NewManager(config)
 	require.NoError(t, err)
 
-	deployment, err := manager.GetDeployment(context.Background(), types.DeploymentID("e357dfaa-fda4-46a3-aa04-4936643b995c"))
+	deployment, err := manager.GetDeployment(context.Background(), types.DeploymentID("2222"))
 	require.NoError(t, err)
 
 	for _, service := range deployment.Services {
@@ -104,5 +105,45 @@ func TestListDeployment(t *testing.T) {
 	for _, deployment := range deploymentList.Items {
 		buf, _ := json.Marshal(deployment.Status.Conditions)
 		t.Logf("deployment:%s", string(buf))
+	}
+}
+
+func TestGetLogs(t *testing.T) {
+	config := &config.ProviderCfg{KubeConfigPath: "./test/config", PublicIP: "192.168.0.132"}
+	manager, err := NewManager(config)
+	require.NoError(t, err)
+
+	logs, err := manager.GetLogs(context.Background(), types.DeploymentID("1111"))
+	require.NoError(t, err)
+
+	for _, serviceLog := range logs {
+		t.Logf("log len:%d", len(serviceLog.Logs))
+		for _, log := range serviceLog.Logs {
+			podLogs := formatLogs(string(log))
+			for _, podLog := range podLogs {
+				t.Logf("%s", podLog)
+			}
+		}
+	}
+}
+
+func formatLogs(log string) []string {
+	logLines := strings.Split(log, "\n")
+	return logLines
+}
+
+func TestGetEvents(t *testing.T) {
+	config := &config.ProviderCfg{KubeConfigPath: "./test/config", PublicIP: "192.168.0.132"}
+	manager, err := NewManager(config)
+	require.NoError(t, err)
+
+	events, err := manager.GetEvents(context.Background(), types.DeploymentID("2222"))
+	require.NoError(t, err)
+
+	for _, serviceEvent := range events {
+		t.Logf("event len:%d", len(serviceEvent.Events))
+		for _, event := range serviceEvent.Events {
+			t.Logf("event:%s", string(event))
+		}
 	}
 }

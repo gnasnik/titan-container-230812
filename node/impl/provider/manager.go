@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/gnasnik/titan-container/node/impl/provider/kube/builder"
 	"github.com/gnasnik/titan-container/node/impl/provider/kube/manifest"
 	logging "github.com/ipfs/go-log/v2"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var log = logging.Logger("provider")
@@ -20,6 +22,8 @@ type Manager interface {
 	UpdateDeployment(ctx context.Context, deployment *types.Deployment) error
 	CloseDeployment(ctx context.Context, deployment *types.Deployment) error
 	GetDeployment(ctx context.Context, id types.DeploymentID) (*types.Deployment, error)
+	GetLogs(ctx context.Context, id types.DeploymentID) ([]*types.ServiceLog, error)
+	GetEvents(ctx context.Context, id types.DeploymentID) ([]*types.ServiceEvent, error)
 }
 
 type manager struct {
@@ -158,4 +162,158 @@ func (m *manager) GetDeployment(ctx context.Context, id types.DeploymentID) (*ty
 	}
 
 	return &types.Deployment{ID: id, Services: services, ProviderExposeIP: m.providerCfg.PublicIP}, nil
+}
+
+func (m *manager) GetLogs(ctx context.Context, id types.DeploymentID) ([]*types.ServiceLog, error) {
+	deploymentID := manifest.DeploymentID{ID: string(id)}
+	ns := builder.DidNS(deploymentID)
+
+	pods, err := m.getPods(ctx, ns)
+	if err != nil {
+		return nil, err
+	}
+
+	logMap := make(map[string][]types.Log)
+
+	for podName, serviceName := range pods {
+		buf, err := m.getPodLogs(ctx, ns, podName)
+		if err != nil {
+			return nil, err
+		}
+		log := string(buf)
+
+		logs, ok := logMap[serviceName]
+		if !ok {
+			logs = make([]types.Log, 0)
+		}
+		logs = append(logs, types.Log(log))
+		logMap[serviceName] = logs
+	}
+
+	serviceLogs := make([]*types.ServiceLog, 0, len(logMap))
+	for serviceName, logs := range logMap {
+		serviceLog := &types.ServiceLog{ServiceName: serviceName, Logs: logs}
+		serviceLogs = append(serviceLogs, serviceLog)
+	}
+
+	return serviceLogs, nil
+}
+
+func (m *manager) GetEvents(ctx context.Context, id types.DeploymentID) ([]*types.ServiceEvent, error) {
+	deploymentID := manifest.DeploymentID{ID: string(id)}
+	ns := builder.DidNS(deploymentID)
+
+	pods, err := m.getPods(ctx, ns)
+	if err != nil {
+		return nil, err
+	}
+
+	podEventMap, err := m.getEvents(ctx, ns)
+	if err != nil {
+		return nil, err
+	}
+
+	serviceEventMap := make(map[string][]types.Event)
+	for podName, serviceName := range pods {
+		es, ok := serviceEventMap[serviceName]
+		if !ok {
+			es = make([]types.Event, 0)
+		}
+
+		if podEvents, ok := podEventMap[podName]; ok {
+			es = append(es, podEvents...)
+		}
+		serviceEventMap[serviceName] = es
+	}
+
+	serviceEvents := make([]*types.ServiceEvent, 0, len(serviceEventMap))
+	for serviceName, events := range serviceEventMap {
+		serviceEvent := &types.ServiceEvent{ServiceName: serviceName, Events: events}
+		serviceEvents = append(serviceEvents, serviceEvent)
+	}
+
+	return serviceEvents, nil
+}
+
+func (m *manager) getPods(ctx context.Context, ns string) (map[string]string, error) {
+	deploymentList, err := m.kc.ListDeployments(context.Background(), ns)
+	if err != nil {
+		return nil, err
+	}
+
+	if deploymentList == nil {
+		return nil, fmt.Errorf("namespace %s do not exist deployment", ns)
+	}
+
+	pods := make(map[string]string)
+	for _, deployment := range deploymentList.Items {
+		labels := deployment.ObjectMeta.Labels
+		podList, err := m.kc.ListPods(context.Background(), ns, labelsToListOptions(labels))
+		if err != nil {
+			return nil, err
+		}
+
+		if podList == nil {
+			continue
+		}
+
+		for _, pod := range podList.Items {
+			pods[pod.Name] = deployment.Name
+		}
+	}
+
+	return pods, nil
+}
+
+func labelsToListOptions(labels map[string]string) metav1.ListOptions {
+	labelSelector := ""
+	for k, v := range labels {
+		if len(labelSelector) > 0 {
+			labelSelector = fmt.Sprintf("%s;%s=%s", labelSelector, k, v)
+		} else {
+			labelSelector = fmt.Sprintf("%s=%s", k, v)
+		}
+	}
+
+	return metav1.ListOptions{LabelSelector: labelSelector}
+}
+
+func (m *manager) getPodLogs(ctx context.Context, ns string, podName string) ([]byte, error) {
+	reader, err := m.kc.PodLogs(ctx, ns, podName)
+	if err != nil {
+		return nil, err
+	}
+	defer reader.Close()
+
+	buf := bytes.Buffer{}
+	_, err = buf.ReadFrom(reader)
+	if err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
+func (m *manager) getEvents(ctx context.Context, ns string) (map[string][]types.Event, error) {
+	eventList, err := m.kc.Events(ctx, ns, metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	if eventList == nil {
+		return nil, nil
+	}
+
+	eventMap := make(map[string][]types.Event)
+	for _, event := range eventList.Items {
+		podName := event.InvolvedObject.Name
+		events, ok := eventMap[podName]
+		if !ok {
+			events = make([]types.Event, 0)
+		}
+
+		events = append(events, types.Event(event.Message))
+		eventMap[podName] = events
+	}
+
+	return eventMap, nil
 }

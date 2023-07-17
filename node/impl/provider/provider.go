@@ -18,6 +18,8 @@ type Provider struct {
 	Manager Manager
 }
 
+var _ api.Provider = &Provider{}
+
 func (p *Provider) Session(ctx context.Context) (uuid.UUID, error) {
 	return session, nil
 }
@@ -46,4 +48,9 @@ func (p *Provider) CloseDeployment(ctx context.Context, deployment *types.Deploy
 	return p.Manager.CloseDeployment(ctx, deployment)
 }
 
-var _ api.Provider = &Provider{}
+func (p *Provider) GetLogs(ctx context.Context, id types.DeploymentID) ([]*types.ServiceLog, error) {
+	return p.Manager.GetLogs(ctx, id)
+}
+func (p *Provider) GetEvents(ctx context.Context, id types.DeploymentID) ([]*types.ServiceEvent, error) {
+	return p.Manager.GetEvents(ctx, id)
+}

@@ -2,7 +2,6 @@ package provider
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 
 	"github.com/gnasnik/titan-container/api/types"
@@ -141,19 +140,12 @@ func k8sDeploymentToService(deployment *appsv1.Deployment) (*types.Service, erro
 		service.Port = int(container.Ports[0].ContainerPort)
 	}
 
-	if len(deployment.Status.Conditions) > 0 {
-		conditions := deployment.Status.Conditions
-		sort.Slice(conditions, func(i, j int) bool {
-			return conditions[i].LastUpdateTime.Before(&conditions[j].LastUpdateTime)
-		})
-
-		lastCondition := conditions[len(conditions)-1]
-		service.State = getConditionStatus(lastCondition)
-		if service.State != types.ServiceStateNormal {
-			service.ErrorMessage = lastCondition.Message
-		}
-
+	status := types.ReplicasStatus{
+		TotalReplicas:     int(deployment.Status.Replicas),
+		ReadyReplicas:     int(deployment.Status.ReadyReplicas),
+		AvailableReplicas: int(deployment.Status.AvailableReplicas),
 	}
+	service.Status = status
 
 	return service, nil
 }
@@ -173,14 +165,4 @@ func k8sServiceToPortMap(serviceList *corev1.ServiceList) (map[string]int, error
 
 	}
 	return portMap, nil
-}
-
-func getConditionStatus(condition appsv1.DeploymentCondition) types.ServiceState {
-	switch condition.Status {
-	case corev1.ConditionTrue:
-		return types.ServiceStateNormal
-	case corev1.ConditionFalse:
-		return types.ServiceStateError
-	}
-	return types.ServiceStateUnknown
 }
