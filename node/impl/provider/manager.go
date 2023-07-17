@@ -80,6 +80,7 @@ func (m *manager) CreateDeployment(ctx context.Context, deployment *types.Deploy
 
 	deploymentList, err := m.kc.ListDeployments(context.Background(), ns)
 	if err != nil {
+		log.Errorf("ListDeployments %s", err.Error())
 		return err
 	}
 
