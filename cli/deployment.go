@@ -2,13 +2,12 @@ package cli
 
 import (
 	"fmt"
-	"os"
-
 	"github.com/docker/go-units"
 	"github.com/gnasnik/titan-container/api/types"
 	"github.com/gnasnik/titan-container/lib/tablewriter"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli/v2"
+	"os"
 )
 
 var defaultDateTimeLayout = "2006-01-02 15:04:05"
@@ -20,6 +19,7 @@ var deploymentCmds = &cli.Command{
 		CreateDeployment,
 		DeploymentList,
 		DeleteDeployment,
+		StatusDeployment,
 	},
 }
 
@@ -60,6 +60,14 @@ var CreateDeployment = &cli.Command{
 		&cli.Int64Flag{
 			Name:  "storage",
 			Usage: "storage",
+		},
+		&cli.StringFlag{
+			Name:  "env",
+			Usage: "set the deployment running environment",
+		},
+		&cli.StringFlag{
+			Name:  "args",
+			Usage: "set the deployment running arguments",
 		},
 	},
 	Action: func(cctx *cli.Context) error {
@@ -124,11 +132,15 @@ var DeploymentList = &cli.Command{
 			tablewriter.Col("Name"),
 			tablewriter.Col("Image"),
 			tablewriter.Col("State"),
+			tablewriter.Col("TotalReplicas"),
+			tablewriter.Col("ReadyReplicas"),
+			tablewriter.Col("AvailableReplicas"),
 			tablewriter.Col("CPU"),
 			tablewriter.Col("Memory"),
 			tablewriter.Col("Storage"),
 			tablewriter.Col("CreatedTime"),
-			tablewriter.Col("ExposeAddresses"),
+			tablewriter.Col("ExposeAddress"),
+			//tablewriter.Col("Error"),
 		)
 
 		opts := &types.GetDeploymentOption{
@@ -149,15 +161,19 @@ var DeploymentList = &cli.Command{
 		for _, deployment := range deployments {
 			for _, service := range deployment.Services {
 				m := map[string]interface{}{
-					"ID":              deployment.ID,
-					"Name":            deployment.Name,
-					"Image":           service.Image,
-					"State":           types.DeploymentStateString(deployment.State),
-					"CPU":             service.CPU,
-					"Memory":          units.BytesSize(float64(service.Memory * units.MiB)),
-					"Storage":         units.BytesSize(float64(service.Storage * units.MiB)),
-					"CreatedTime":     deployment.CreatedAt.Format(defaultDateTimeLayout),
-					"ExposeAddresses": fmt.Sprintf("%s:%d", deployment.ProviderExposeIP, service.ExposePort),
+					"ID":                deployment.ID,
+					"Name":              deployment.Name,
+					"Image":             service.Image,
+					"State":             types.DeploymentStateString(deployment.State),
+					"TotalReplicas":     service.Status.TotalReplicas,
+					"ReadyReplicas":     service.Status.ReadyReplicas,
+					"AvailableReplicas": service.Status.AvailableReplicas,
+					"CPU":               service.CPU,
+					"Memory":            units.BytesSize(float64(service.Memory * units.MiB)),
+					"Storage":           units.BytesSize(float64(service.Storage * units.MiB)),
+					"CreatedTime":       deployment.CreatedAt.Format(defaultDateTimeLayout),
+					//"Error":         service.ErrorMessage,
+					"ExposeAddress": fmt.Sprintf("%s:%d", deployment.ProviderExposeIP, service.ExposePort),
 				}
 				tw.Write(m)
 			}
@@ -201,6 +217,83 @@ var DeleteDeployment = &cli.Command{
 			err = api.CloseDeployment(ctx, deployment)
 			if err != nil {
 				log.Errorf("delete deployment failed: %v", err)
+			}
+		}
+
+		return nil
+	},
+}
+
+var StatusDeployment = &cli.Command{
+	Name:  "status",
+	Usage: "show deployment status",
+	Flags: []cli.Flag{
+		&cli.BoolFlag{
+			Name:  "log",
+			Usage: "show deployment log",
+		},
+	},
+	Action: func(cctx *cli.Context) error {
+		if cctx.NArg() != 1 {
+			return IncorrectNumArgs(cctx)
+		}
+
+		api, closer, err := GetManagerAPI(cctx)
+		if err != nil {
+			return err
+		}
+		defer closer()
+
+		ctx := ReqContext(cctx)
+		deploymentID := types.DeploymentID(cctx.Args().First())
+
+		deployments, err := api.GetDeploymentList(ctx, &types.GetDeploymentOption{
+			DeploymentID: deploymentID,
+		})
+		if err != nil {
+			return err
+		}
+
+		var deployment *types.Deployment
+		for _, d := range deployments {
+			if d.ID == deploymentID {
+				deployment = d
+				continue
+			}
+		}
+
+		if deployment == nil {
+			return errors.New("deployment not found")
+		}
+
+		fmt.Printf("DeploymentID:\t%s\n", deployment.ID)
+		fmt.Printf("State:\t\t%s\n", types.DeploymentStateString(deployment.State))
+		fmt.Printf("CreadTime:\t%v\n", deployment.CreatedAt)
+		fmt.Printf("--------\nEvents:\n")
+
+		serviceEvents, err := api.GetEvents(ctx, deployment)
+		if err != nil {
+			return err
+		}
+
+		for _, sv := range serviceEvents {
+			for i, event := range sv.Events {
+				fmt.Printf("%d.\t[%s]\t%s\n", i, sv.ServiceName, event)
+			}
+		}
+
+		if cctx.Bool("log") {
+			fmt.Printf("--------\nLogs:\n")
+			
+			serviceLogs, err := api.GetLogs(ctx, deployment)
+			if err != nil {
+				return err
+			}
+
+			for _, sl := range serviceLogs {
+				for i, l := range sl.Logs {
+					fmt.Printf("%d.\t[%s]\t%s\n", i, sl.ServiceName, l)
+				}
 			}
 		}
 

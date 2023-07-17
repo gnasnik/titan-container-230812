@@ -39,8 +39,8 @@ func addNewDeployment(ctx context.Context, tx *sqlx.Tx, deployment *types.Deploy
 }
 
 func addNewServices(ctx context.Context, tx *sqlx.Tx, services []*types.Service) error {
-	qry := `INSERT INTO services (id, image, port, expose_port, state, cpu, memory, storage, deployment_id, env, arguments, error_message, created_at, updated_at) 
-		        VALUES (:id, :image, :port, :expose_port, :state, :cpu, :memory, :storage, :deployment_id, :env, :arguments, :error_message, :created_at, :updated_at)`
+	qry := `INSERT INTO services (id, name, image, port, expose_port, cpu, memory, storage, deployment_id, env, arguments, error_message, created_at, updated_at) 
+		        VALUES (:id,:name, :image, :port, :expose_port, :cpu, :memory, :storage, :deployment_id, :env, :arguments, :error_message, :created_at, :updated_at)`
 	_, err := tx.NamedExecContext(ctx, qry, services)
 
 	return err
@@ -48,12 +48,22 @@ func addNewServices(ctx context.Context, tx *sqlx.Tx, services []*types.Service)
 
 type DeploymentService struct {
 	types.Deployment
-	types.Service
+	types.Service `db:"service"`
 }
 
 func (m *ManagerDB) GetDeployments(ctx context.Context, option *types.GetDeploymentOption) ([]*types.Deployment, error) {
 	var ds []*DeploymentService
-	qry := `SELECT d.*, s.image, s.cpu, s.memory,s.storage, s.port, s.expose_port, s.env, s.arguments, p.host_uri AS provider_expose_ip, s.error_message 
+	qry := `SELECT d.*, s.image as 'service.image', 
+			s.name as 'service.name',
+			s.cpu as 'service.cpu', 
+			s.memory as 'service.memory',
+			s.storage as 'service.storage', 
+			s.port as 'service.port', 
+			s.expose_port as 'service.expose_port', 
+			s.env as 'service.env', 
+			s.arguments as 'service.arguments', 
+			s.error_message  as 'service.error_message',
+			p.host_uri  as 'provider_expose_ip'
 		FROM deployments d LEFT JOIN services s ON d.id = s.deployment_id LEFT JOIN providers p ON d.provider_id = p.id`
 
 	var condition []string

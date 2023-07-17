@@ -2,6 +2,7 @@ package manager
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -76,7 +77,31 @@ func (m *Manager) CreateOrder(ctx context.Context) error {
 }
 
 func (m *Manager) GetDeploymentList(ctx context.Context, opt *types.GetDeploymentOption) ([]*types.Deployment, error) {
-	return m.DB.GetDeployments(ctx, opt)
+	deployments, err := m.DB.GetDeployments(ctx, opt)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, deployment := range deployments {
+		providerApi, err := m.ProviderManager.Get(deployment.ProviderID)
+		if err != nil {
+			deployment.State = types.DeploymentStateInActive
+			continue
+		}
+
+		remoteDeployment, err := providerApi.GetDeployment(ctx, deployment.ID)
+		if err != nil {
+			continue
+		}
+
+		for _, service := range remoteDeployment.Services {
+			fmt.Println("==", service.Status.AvailableReplicas, service.Status.TotalReplicas)
+		}
+
+		deployment.Services = remoteDeployment.Services
+	}
+
+	return deployments, nil
 }
 
 func (m *Manager) CreateDeployment(ctx context.Context, deployment *types.Deployment) error {
@@ -146,6 +171,24 @@ func (m *Manager) CloseDeployment(ctx context.Context, deployment *types.Deploym
 	}
 
 	return m.DB.UpdateDeploymentState(ctx, deployment.ID, types.DeploymentStateClose)
+}
+
+func (m *Manager) GetLogs(ctx context.Context, deployment *types.Deployment) ([]*types.ServiceLog, error) {
+	providerApi, err := m.ProviderManager.Get(deployment.ProviderID)
+	if err != nil {
+		return nil, err
+	}
+
+	return providerApi.GetLogs(ctx, deployment.ID)
+}
+
+func (m *Manager) GetEvents(ctx context.Context, deployment *types.Deployment) ([]*types.ServiceEvent, error) {
+	providerApi, err := m.ProviderManager.Get(deployment.ProviderID)
+	if err != nil {
+		return nil, err
+	}
+
+	return providerApi.GetEvents(ctx, deployment.ID)
 }
 
 var _ api.Manager = &Manager{}

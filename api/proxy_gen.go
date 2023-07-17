@@ -51,6 +51,10 @@ type ManagerStruct struct {
 
 		GetDeploymentList func(p0 context.Context, p1 *types.GetDeploymentOption) ([]*types.Deployment, error) `perm:"read"`
 
+		GetEvents func(p0 context.Context, p1 *types.Deployment) ([]*types.ServiceEvent, error) `perm:"read"`
+
+		GetLogs func(p0 context.Context, p1 *types.Deployment) ([]*types.ServiceLog, error) `perm:"read"`
+
 		GetProviderList func(p0 context.Context) ([]*types.Provider, error) `perm:"read"`
 
 		GetTemplateList func(p0 context.Context) ([]*types.Template, error) `perm:"read"`
@@ -233,6 +237,28 @@ func (s *ManagerStruct) GetDeploymentList(p0 context.Context, p1 *types.GetDeplo
 
 func (s *ManagerStub) GetDeploymentList(p0 context.Context, p1 *types.GetDeploymentOption) ([]*types.Deployment, error) {
 	return *new([]*types.Deployment), ErrNotSupported
+}
+
+func (s *ManagerStruct) GetEvents(p0 context.Context, p1 *types.Deployment) ([]*types.ServiceEvent, error) {
+	if s.Internal.GetEvents == nil {
+		return *new([]*types.ServiceEvent), ErrNotSupported
+	}
+	return s.Internal.GetEvents(p0, p1)
+}
+
+func (s *ManagerStub) GetEvents(p0 context.Context, p1 *types.Deployment) ([]*types.ServiceEvent, error) {
+	return *new([]*types.ServiceEvent), ErrNotSupported
+}
+
+func (s *ManagerStruct) GetLogs(p0 context.Context, p1 *types.Deployment) ([]*types.ServiceLog, error) {
+	if s.Internal.GetLogs == nil {
+		return *new([]*types.ServiceLog), ErrNotSupported
+	}
+	return s.Internal.GetLogs(p0, p1)
+}
+
+func (s *ManagerStub) GetLogs(p0 context.Context, p1 *types.Deployment) ([]*types.ServiceLog, error) {
+	return *new([]*types.ServiceLog), ErrNotSupported
 }
 
 func (s *ManagerStruct) GetProviderList(p0 context.Context) ([]*types.Provider, error) {
