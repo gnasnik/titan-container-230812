@@ -89,11 +89,9 @@ func envToManifestEnv(serviceEnv types.Env) []string {
 }
 
 func imageToServiceName(image string) string {
-	serviceName := image
-	names := strings.Split(image, ":")
-	if len(names) > 0 {
-		serviceName = names[0]
-	}
+	names := strings.Split(image, "/")
+	names = strings.Split(names[len(names)-1], ":")
+	serviceName := names[0]
 
 	uuidString := uuid.NewString()
 	uuidString = strings.Replace(uuidString, "-", "", -1)
