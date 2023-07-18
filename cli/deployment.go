@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/docker/go-units"
 	"github.com/gnasnik/titan-container/api/types"
@@ -65,7 +66,7 @@ var CreateDeployment = &cli.Command{
 			Name:  "env",
 			Usage: "set the deployment running environment",
 		},
-		&cli.StringFlag{
+		&cli.StringSliceFlag{
 			Name:  "args",
 			Usage: "set the deployment running arguments",
 		},
@@ -80,6 +81,14 @@ var CreateDeployment = &cli.Command{
 		ctx := ReqContext(cctx)
 		providerID := types.ProviderID(cctx.String("provider-id"))
 
+		var env types.Env
+		if cctx.String("env") != "" {
+			err := json.Unmarshal([]byte(cctx.String("env")), &env)
+			if err != nil {
+				return err
+			}
+		}
+
 		deployment := &types.Deployment{
 			ProviderID: providerID,
 			Name:       cctx.String("name"),
@@ -92,7 +101,8 @@ var CreateDeployment = &cli.Command{
 						Memory:  cctx.Int64("mem"),
 						Storage: cctx.Int64("storage"),
 					},
-					Env: map[string]string{"hello": "test"},
+					Env:       env,
+					Arguments: cctx.StringSlice("args"),
 				},
 			},
 		}

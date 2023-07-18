@@ -140,6 +140,8 @@ type GetDeploymentOption struct {
 	Owner        string
 	DeploymentID DeploymentID
 	State        []DeploymentState
+	Page         int
+	Size         int
 }
 
 type ComputeResources struct {

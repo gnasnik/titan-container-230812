@@ -2,7 +2,6 @@ package manager
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"time"
 
@@ -92,10 +91,6 @@ func (m *Manager) GetDeploymentList(ctx context.Context, opt *types.GetDeploymen
 		remoteDeployment, err := providerApi.GetDeployment(ctx, deployment.ID)
 		if err != nil {
 			continue
-		}
-
-		for _, service := range remoteDeployment.Services {
-			fmt.Println("==", service.Status.AvailableReplicas, service.Status.TotalReplicas)
 		}
 
 		deployment.Services = remoteDeployment.Services
