@@ -55,17 +55,13 @@ type ManagerStruct struct {
 
 		GetLogs func(p0 context.Context, p1 *types.Deployment) ([]*types.ServiceLog, error) `perm:"read"`
 
-		GetProviderList func(p0 context.Context) ([]*types.Provider, error) `perm:"read"`
+		GetProviderList func(p0 context.Context, p1 *types.GetProviderOption) ([]*types.Provider, error) `perm:"read"`
 
 		GetStatistics func(p0 context.Context, p1 types.ProviderID) (*types.ResourcesStatistics, error) `perm:"read"`
-
-		GetTemplateList func(p0 context.Context) ([]*types.Template, error) `perm:"read"`
 
 		ProviderConnect func(p0 context.Context, p1 string, p2 *types.Provider) error `perm:"admin"`
 
 		UpdateDeployment func(p0 context.Context, p1 *types.Deployment) error `perm:"admin"`
-
-		UpdateProvider func(p0 context.Context, p1 *types.Provider) error `perm:"admin"`
 	}
 }
 
@@ -263,14 +259,14 @@ func (s *ManagerStub) GetLogs(p0 context.Context, p1 *types.Deployment) ([]*type
 	return *new([]*types.ServiceLog), ErrNotSupported
 }
 
-func (s *ManagerStruct) GetProviderList(p0 context.Context) ([]*types.Provider, error) {
+func (s *ManagerStruct) GetProviderList(p0 context.Context, p1 *types.GetProviderOption) ([]*types.Provider, error) {
 	if s.Internal.GetProviderList == nil {
 		return *new([]*types.Provider), ErrNotSupported
 	}
-	return s.Internal.GetProviderList(p0)
+	return s.Internal.GetProviderList(p0, p1)
 }
 
-func (s *ManagerStub) GetProviderList(p0 context.Context) ([]*types.Provider, error) {
+func (s *ManagerStub) GetProviderList(p0 context.Context, p1 *types.GetProviderOption) ([]*types.Provider, error) {
 	return *new([]*types.Provider), ErrNotSupported
 }
 
@@ -283,17 +279,6 @@ func (s *ManagerStruct) GetStatistics(p0 context.Context, p1 types.ProviderID) (
 
 func (s *ManagerStub) GetStatistics(p0 context.Context, p1 types.ProviderID) (*types.ResourcesStatistics, error) {
 	return nil, ErrNotSupported
-}
-
-func (s *ManagerStruct) GetTemplateList(p0 context.Context) ([]*types.Template, error) {
-	if s.Internal.GetTemplateList == nil {
-		return *new([]*types.Template), ErrNotSupported
-	}
-	return s.Internal.GetTemplateList(p0)
-}
-
-func (s *ManagerStub) GetTemplateList(p0 context.Context) ([]*types.Template, error) {
-	return *new([]*types.Template), ErrNotSupported
 }
 
 func (s *ManagerStruct) ProviderConnect(p0 context.Context, p1 string, p2 *types.Provider) error {
@@ -315,17 +300,6 @@ func (s *ManagerStruct) UpdateDeployment(p0 context.Context, p1 *types.Deploymen
 }
 
 func (s *ManagerStub) UpdateDeployment(p0 context.Context, p1 *types.Deployment) error {
-	return ErrNotSupported
-}
-
-func (s *ManagerStruct) UpdateProvider(p0 context.Context, p1 *types.Provider) error {
-	if s.Internal.UpdateProvider == nil {
-		return ErrNotSupported
-	}
-	return s.Internal.UpdateProvider(p0, p1)
-}
-
-func (s *ManagerStub) UpdateProvider(p0 context.Context, p1 *types.Provider) error {
 	return ErrNotSupported
 }
 

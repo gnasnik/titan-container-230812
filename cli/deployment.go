@@ -157,6 +157,16 @@ var DeploymentList = &cli.Command{
 			Name:  "show-all",
 			Usage: "show deleted and inactive deployments",
 		},
+		&cli.IntFlag{
+			Name:  "page",
+			Usage: "the page number",
+			Value: 1,
+		},
+		&cli.IntFlag{
+			Name:  "size",
+			Usage: "the page size",
+			Value: 10,
+		},
 	},
 	Action: func(cctx *cli.Context) error {
 		api, closer, err := GetManagerAPI(cctx)
@@ -186,6 +196,8 @@ var DeploymentList = &cli.Command{
 			Owner:        cctx.String("owner"),
 			State:        []types.DeploymentState{types.DeploymentStateActive},
 			DeploymentID: types.DeploymentID(cctx.String("id")),
+			Page:         cctx.Int("page"),
+			Size:         cctx.Int("size"),
 		}
 
 		if cctx.Bool("show-all") {

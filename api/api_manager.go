@@ -10,14 +10,9 @@ import (
 type Manager interface {
 	Common
 
-	GetStatistics(ctx context.Context, id types.ProviderID) (*types.ResourcesStatistics, error) //perm:read
-	// ProviderConnect provider registration
-	ProviderConnect(ctx context.Context, url string, provider *types.Provider) error //perm:admin
-	UpdateProvider(ctx context.Context, provider *types.Provider) error              //perm:admin
-
-	GetProviderList(ctx context.Context) ([]*types.Provider, error) //perm:read
-	GetTemplateList(ctx context.Context) ([]*types.Template, error) //perm:read
-
+	GetStatistics(ctx context.Context, id types.ProviderID) (*types.ResourcesStatistics, error)         //perm:read
+	ProviderConnect(ctx context.Context, url string, provider *types.Provider) error                    //perm:admin
+	GetProviderList(ctx context.Context, option *types.GetProviderOption) ([]*types.Provider, error)    //perm:read
 	GetDeploymentList(ctx context.Context, opt *types.GetDeploymentOption) ([]*types.Deployment, error) //perm:read
 	CreateDeployment(ctx context.Context, deployment *types.Deployment) error                           //perm:admin
 	UpdateDeployment(ctx context.Context, deployment *types.Deployment) error                           //perm:admin

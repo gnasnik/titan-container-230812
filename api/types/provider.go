@@ -35,6 +35,14 @@ type Provider struct {
 	UpdatedAt time.Time     `db:"updated_at"`
 }
 
+type GetProviderOption struct {
+	Owner string
+	ID    ProviderID
+	State []ProviderState
+	Page  int
+	Size  int
+}
+
 type ResourcesStatistics struct {
 	Memory   Memory
 	CPUCores CPUCores

@@ -20,6 +20,26 @@ var providerCmds = &cli.Command{
 var ProviderList = &cli.Command{
 	Name:  "list",
 	Usage: "List providers",
+	Flags: []cli.Flag{
+		&cli.StringFlag{
+			Name:  "owner",
+			Usage: "owner address",
+		},
+		&cli.StringFlag{
+			Name:  "id",
+			Usage: "the provider id",
+		},
+		&cli.IntFlag{
+			Name:  "page",
+			Usage: "the page number",
+			Value: 1,
+		},
+		&cli.IntFlag{
+			Name:  "size",
+			Usage: "the page size",
+			Value: 10,
+		},
+	},
 	Action: func(cctx *cli.Context) error {
 		api, closer, err := GetManagerAPI(cctx)
 		if err != nil {
@@ -40,7 +60,15 @@ var ProviderList = &cli.Command{
 			tablewriter.Col("CreatedTime"),
 		)
 
-		providers, err := api.GetProviderList(ctx)
+		opts := &types.GetProviderOption{
+			Owner: cctx.String("owner"),
+			State: []types.ProviderState{types.ProviderStateOnline, types.ProviderStateOffline, types.ProviderStateAbnormal},
+			ID:    types.ProviderID(cctx.String("id")),
+			Page:  cctx.Int("page"),
+			Size:  cctx.Int("size"),
+		}
+
+		providers, err := api.GetProviderList(ctx, opts)
 		if err != nil {
 			return err
 		}

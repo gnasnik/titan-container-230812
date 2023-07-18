@@ -88,6 +88,18 @@ func (m *ManagerDB) GetDeployments(ctx context.Context, option *types.GetDeploym
 		qry += strings.Join(condition, ` AND `)
 	}
 
+	if option.Page <= 0 {
+		option.Page = 1
+	}
+
+	if option.Size <= 0 {
+		option.Size = 10
+	}
+
+	offset := (option.Page - 1) * option.Size
+	limit := option.Size
+	qry += fmt.Sprintf(" LIMIT %d OFFSET %d", limit, offset)
+
 	err := m.db.SelectContext(ctx, &ds, qry)
 	if err != nil {
 		return nil, err

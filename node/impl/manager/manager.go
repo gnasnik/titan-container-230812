@@ -65,23 +65,8 @@ func (m *Manager) ProviderConnect(ctx context.Context, url string, provider *typ
 	return m.DB.AddNewProvider(ctx, provider)
 }
 
-func (m *Manager) UpdateProvider(ctx context.Context, provider *types.Provider) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (m *Manager) GetProviderList(ctx context.Context) ([]*types.Provider, error) {
-	return m.DB.GetAllProviders(ctx)
-}
-
-func (m *Manager) GetTemplateList(ctx context.Context) ([]*types.Template, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (m *Manager) CreateOrder(ctx context.Context) error {
-	//TODO implement me
-	panic("implement me")
+func (m *Manager) GetProviderList(ctx context.Context, opt *types.GetProviderOption) ([]*types.Provider, error) {
+	return m.DB.GetAllProviders(ctx, opt)
 }
 
 func (m *Manager) GetDeploymentList(ctx context.Context, opt *types.GetDeploymentOption) ([]*types.Deployment, error) {
