@@ -65,6 +65,11 @@ func (m *manager) GetStatistics(ctx context.Context) (*types.ResourcesStatistics
 		statistics.Storage.Available += uint64(node.EphemeralStorage.Allocatable.AsApproximateFloat64())
 		statistics.Storage.Active += uint64(node.EphemeralStorage.Allocated.AsApproximateFloat64())
 	}
+
+	statistics.CPUCores.Available = statistics.CPUCores.Available - statistics.CPUCores.Active
+	statistics.Memory.Available = statistics.Memory.Available - statistics.Memory.Active
+	statistics.Storage.Available = statistics.Storage.Available - statistics.Storage.Active
+
 	return statistics, nil
 }
 
