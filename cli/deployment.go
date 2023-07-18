@@ -294,8 +294,8 @@ var StatusDeployment = &cli.Command{
 			}
 
 			for _, sl := range serviceLogs {
-				for i, l := range sl.Logs {
-					fmt.Printf("%d.\t[%s]\t%s\n", i, sl.ServiceName, l)
+				for _, l := range sl.Logs {
+					fmt.Printf("%s\n", l)
 				}
 			}
 		}
