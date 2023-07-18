@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"github.com/docker/go-units"
 	"github.com/gnasnik/titan-container/api/types"
 	"github.com/gnasnik/titan-container/lib/tablewriter"
@@ -33,11 +34,8 @@ var ProviderList = &cli.Command{
 			tablewriter.Col("IP"),
 			tablewriter.Col("State"),
 			tablewriter.Col("HostURI"),
-			tablewriter.Col("CPU"),
 			tablewriter.Col("CPUAvail"),
-			tablewriter.Col("Memory"),
 			tablewriter.Col("MemoryAvail"),
-			tablewriter.Col("Storage"),
 			tablewriter.Col("StorageAvail"),
 			tablewriter.Col("CreatedTime"),
 		)
@@ -58,12 +56,9 @@ var ProviderList = &cli.Command{
 				"IP":           provider.IP,
 				"State":        types.ProviderStateString(provider.State),
 				"HostURI":      provider.HostURI,
-				"CPU":          resource.CPUCores.MaxCPUCores,
-				"CPUAvail":     resource.CPUCores.Available,
-				"Memory":       units.BytesSize(float64(resource.Memory.MaxMemory)),
-				"MemoryAvail":  units.BytesSize(float64(resource.Memory.Available)),
-				"Storage":      units.BytesSize(float64(resource.Storage.MaxStorage)),
-				"StorageAvail": units.BytesSize(float64(resource.Storage.Available)),
+				"CPUAvail":     fmt.Sprintf("%.1f/%.1f", resource.CPUCores.Available, resource.CPUCores.MaxCPUCores),
+				"MemoryAvail":  fmt.Sprintf("%s/%s", units.BytesSize(float64(resource.Memory.Available)), units.BytesSize(float64(resource.Memory.MaxMemory))),
+				"StorageAvail": fmt.Sprintf("%s/%s", units.BytesSize(float64(resource.Storage.Available)), units.BytesSize(float64(resource.Storage.MaxStorage))),
 				"CreateTime":   provider.CreatedAt.Format(defaultDateTimeLayout),
 			}
 			tw.Write(m)
