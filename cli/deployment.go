@@ -129,18 +129,17 @@ var DeploymentList = &cli.Command{
 
 		tw := tablewriter.New(
 			tablewriter.Col("ID"),
-			//tablewriter.Col("Name"),
 			tablewriter.Col("Image"),
 			tablewriter.Col("State"),
-			tablewriter.Col("TotalReplicas"),
-			tablewriter.Col("ReadyReplicas"),
-			tablewriter.Col("AvailableReplicas"),
+			tablewriter.Col("Total"),
+			tablewriter.Col("Ready"),
+			tablewriter.Col("Available"),
 			tablewriter.Col("CPU"),
 			tablewriter.Col("Memory"),
 			tablewriter.Col("Storage"),
+			tablewriter.Col("Provider"),
+			tablewriter.Col("Port"),
 			tablewriter.Col("CreatedTime"),
-			tablewriter.Col("ExposeAddress"),
-			//tablewriter.Col("Error"),
 		)
 
 		opts := &types.GetDeploymentOption{
@@ -160,20 +159,24 @@ var DeploymentList = &cli.Command{
 
 		for _, deployment := range deployments {
 			for _, service := range deployment.Services {
+				state := types.DeploymentStateInActive
+				if service.Status.TotalReplicas == service.Status.ReadyReplicas {
+					state = types.DeploymentStateActive
+				}
+
 				m := map[string]interface{}{
-					"ID": deployment.ID,
-					//"Name":              deployment.Name,
-					"Image":             service.Image,
-					"State":             types.DeploymentStateString(deployment.State),
-					"TotalReplicas":     service.Status.TotalReplicas,
-					"ReadyReplicas":     service.Status.ReadyReplicas,
-					"AvailableReplicas": service.Status.AvailableReplicas,
-					"CPU":               service.CPU,
-					"Memory":            units.BytesSize(float64(service.Memory * units.MiB)),
-					"Storage":           units.BytesSize(float64(service.Storage * units.MiB)),
-					"CreatedTime":       deployment.CreatedAt.Format(defaultDateTimeLayout),
-					//"Error":         service.ErrorMessage,
-					"ExposeAddress": fmt.Sprintf("%s:%d->%d", deployment.ProviderExposeIP, service.Port, service.ExposePort),
+					"ID":          deployment.ID,
+					"Image":       service.Image,
+					"State":       types.DeploymentStateString(state),
+					"Total":       service.Status.TotalReplicas,
+					"Ready":       service.Status.ReadyReplicas,
+					"Available":   service.Status.AvailableReplicas,
+					"CPU":         service.CPU,
+					"Memory":      units.BytesSize(float64(service.Memory * units.MiB)),
+					"Storage":     units.BytesSize(float64(service.Storage * units.MiB)),
+					"Provider":    deployment.ProviderExposeIP,
+					"Port":        fmt.Sprintf("%d->%d", service.Port, service.ExposePort),
+					"CreatedTime": deployment.CreatedAt.Format(defaultDateTimeLayout),
 				}
 				tw.Write(m)
 			}
