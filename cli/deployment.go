@@ -1,14 +1,17 @@
 package cli
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/docker/go-units"
+	"github.com/gnasnik/titan-container/api"
 	"github.com/gnasnik/titan-container/api/types"
 	"github.com/gnasnik/titan-container/lib/tablewriter"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli/v2"
 	"os"
+	"sigs.k8s.io/yaml"
 )
 
 var defaultDateTimeLayout = "2006-01-02 15:04:05"
@@ -38,6 +41,10 @@ var CreateDeployment = &cli.Command{
 			Usage: "owner address",
 		},
 		&cli.StringFlag{
+			Name:  "template",
+			Usage: "from the template file",
+		},
+		&cli.StringFlag{
 			Name:  "name",
 			Usage: "deployment name",
 		},
@@ -46,9 +53,8 @@ var CreateDeployment = &cli.Command{
 			Usage: "deployment internal server port",
 		},
 		&cli.StringFlag{
-			Name:     "image",
-			Usage:    "deployment image",
-			Required: true,
+			Name:  "image",
+			Usage: "deployment image",
 		},
 		&cli.Float64Flag{
 			Name:  "cpu",
@@ -81,6 +87,14 @@ var CreateDeployment = &cli.Command{
 		ctx := ReqContext(cctx)
 		providerID := types.ProviderID(cctx.String("provider-id"))
 
+		if cctx.String("template") != "" {
+			return createDeploymentFromTemplate(ctx, api, providerID, cctx.String("template"))
+		}
+
+		if cctx.String("image") == "" {
+			return errors.Errorf("Required flags image not set")
+		}
+
 		var env types.Env
 		if cctx.String("env") != "" {
 			err := json.Unmarshal([]byte(cctx.String("env")), &env)
@@ -109,6 +123,22 @@ var CreateDeployment = &cli.Command{
 
 		return api.CreateDeployment(ctx, deployment)
 	},
+}
+
+func createDeploymentFromTemplate(ctx context.Context, api api.Manager, providerID types.ProviderID, path string) error {
+	yamlFiles, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+
+	var deployment types.Deployment
+	err = yaml.Unmarshal(yamlFiles, &deployment)
+	if err != nil {
+		return err
+	}
+
+	deployment.ProviderID = providerID
+	return api.CreateDeployment(ctx, &deployment)
 }
 
 var DeploymentList = &cli.Command{

@@ -1,0 +1,9 @@
+Name: mysql
+Services:
+  - Image: mysql
+    Port: 3306
+    CPU: 0.2
+    Memory: 500
+    Storage: 500
+    Env:
+      MYSQL_ROOT_PASSWORD: "1234"
