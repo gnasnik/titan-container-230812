@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"github.com/docker/go-units"
 	"github.com/gnasnik/titan-container/api/types"
 	"github.com/gnasnik/titan-container/lib/tablewriter"
 	"github.com/urfave/cli/v2"
@@ -32,6 +33,12 @@ var ProviderList = &cli.Command{
 			tablewriter.Col("IP"),
 			tablewriter.Col("State"),
 			tablewriter.Col("HostURI"),
+			tablewriter.Col("CPU"),
+			tablewriter.Col("CPUAvail"),
+			tablewriter.Col("Memory"),
+			tablewriter.Col("MemoryAvail"),
+			tablewriter.Col("Storage"),
+			tablewriter.Col("StorageAvail"),
 			tablewriter.Col("CreatedTime"),
 		)
 
@@ -41,12 +48,23 @@ var ProviderList = &cli.Command{
 		}
 
 		for _, provider := range providers {
+			resource, err := api.GetStatistics(ctx, provider.ID)
+			if err != nil {
+				continue
+			}
+
 			m := map[string]interface{}{
-				"ID":         provider.ID,
-				"IP":         provider.IP,
-				"State":      types.ProviderStateString(provider.State),
-				"HostURI":    provider.HostURI,
-				"CreateTime": provider.CreatedAt,
+				"ID":           provider.ID,
+				"IP":           provider.IP,
+				"State":        types.ProviderStateString(provider.State),
+				"HostURI":      provider.HostURI,
+				"CPU":          resource.CPUCores.MaxCPUCores,
+				"CPUAvail":     resource.CPUCores.Available,
+				"Memory":       units.BytesSize(float64(resource.Memory.MaxMemory)),
+				"MemoryAvail":  units.BytesSize(float64(resource.Memory.Available)),
+				"Storage":      units.BytesSize(float64(resource.Storage.MaxStorage)),
+				"StorageAvail": units.BytesSize(float64(resource.Storage.Available)),
+				"CreateTime":   provider.CreatedAt.Format(defaultDateTimeLayout),
 			}
 			tw.Write(m)
 		}

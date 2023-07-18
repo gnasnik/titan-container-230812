@@ -57,6 +57,8 @@ type ManagerStruct struct {
 
 		GetProviderList func(p0 context.Context) ([]*types.Provider, error) `perm:"read"`
 
+		GetStatistics func(p0 context.Context, p1 types.ProviderID) (*types.ResourcesStatistics, error) `perm:"read"`
+
 		GetTemplateList func(p0 context.Context) ([]*types.Template, error) `perm:"read"`
 
 		ProviderConnect func(p0 context.Context, p1 string, p2 *types.Provider) error `perm:"admin"`
@@ -270,6 +272,17 @@ func (s *ManagerStruct) GetProviderList(p0 context.Context) ([]*types.Provider, 
 
 func (s *ManagerStub) GetProviderList(p0 context.Context) ([]*types.Provider, error) {
 	return *new([]*types.Provider), ErrNotSupported
+}
+
+func (s *ManagerStruct) GetStatistics(p0 context.Context, p1 types.ProviderID) (*types.ResourcesStatistics, error) {
+	if s.Internal.GetStatistics == nil {
+		return nil, ErrNotSupported
+	}
+	return s.Internal.GetStatistics(p0, p1)
+}
+
+func (s *ManagerStub) GetStatistics(p0 context.Context, p1 types.ProviderID) (*types.ResourcesStatistics, error) {
+	return nil, ErrNotSupported
 }
 
 func (s *ManagerStruct) GetTemplateList(p0 context.Context) ([]*types.Template, error) {

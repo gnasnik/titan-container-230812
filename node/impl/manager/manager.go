@@ -31,6 +31,15 @@ type Manager struct {
 	GetManagerConfigFunc dtypes.GetManagerConfigFunc
 }
 
+func (m *Manager) GetStatistics(ctx context.Context, id types.ProviderID) (*types.ResourcesStatistics, error) {
+	providerApi, err := m.ProviderManager.Get(id)
+	if err != nil {
+		return nil, err
+	}
+
+	return providerApi.GetStatistics(ctx)
+}
+
 func (m *Manager) ProviderConnect(ctx context.Context, url string, provider *types.Provider) error {
 	remoteAddr := handler.GetRemoteAddr(ctx)
 

@@ -10,6 +10,7 @@ import (
 type Manager interface {
 	Common
 
+	GetStatistics(ctx context.Context, id types.ProviderID) (*types.ResourcesStatistics, error) //perm:read
 	// ProviderConnect provider registration
 	ProviderConnect(ctx context.Context, url string, provider *types.Provider) error //perm:admin
 	UpdateProvider(ctx context.Context, provider *types.Provider) error              //perm:admin
