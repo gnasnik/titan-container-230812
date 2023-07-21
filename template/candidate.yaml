@@ -1,0 +1,12 @@
+Name: candidate
+Services:
+  - Image: zscboy/candidate:latest
+    CPU: 0.1
+    Memory: 100
+    Storage: 100
+    Ports:
+      - Port: 2345
+      - Port: 9000
+    Env:
+      KEY: "eyJub2RlX2lkIjoiY185ZDM5MzAwMzJiN2I0NGFlYTk2MjhjZGU2N2EzZTQzMiIsImFyZWFfaWQiOiJBc2lhLUNoaW5hLUd1YW5nZG9uZy1TaGVuemhlbiIsImFjdGl2YXRpb25fa2V5IjoiMzVlMGIxNDlmYWU4Yzk1YWY0NDM3NDY4MWUyOWZmZmYiLCJub2RlX3R5cGUiOjJ9"
+      LOCATOR_API_INFO: "https://locator.titannet.io:5000"
