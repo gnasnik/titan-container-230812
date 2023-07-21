@@ -19,4 +19,5 @@ type Manager interface {
 	CloseDeployment(ctx context.Context, deployment *types.Deployment) error                            //perm:admin
 	GetLogs(ctx context.Context, deployment *types.Deployment) ([]*types.ServiceLog, error)             //perm:read
 	GetEvents(ctx context.Context, deployment *types.Deployment) ([]*types.ServiceEvent, error)         //perm:read
+	SetProperties(ctx context.Context, properties *types.Properties) error                              //perm:admin
 }

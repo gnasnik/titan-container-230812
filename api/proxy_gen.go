@@ -61,6 +61,8 @@ type ManagerStruct struct {
 
 		ProviderConnect func(p0 context.Context, p1 string, p2 *types.Provider) error `perm:"admin"`
 
+		SetProperties func(p0 context.Context, p1 *types.Properties) error `perm:"admin"`
+
 		UpdateDeployment func(p0 context.Context, p1 *types.Deployment) error `perm:"admin"`
 	}
 }
@@ -289,6 +291,17 @@ func (s *ManagerStruct) ProviderConnect(p0 context.Context, p1 string, p2 *types
 }
 
 func (s *ManagerStub) ProviderConnect(p0 context.Context, p1 string, p2 *types.Provider) error {
+	return ErrNotSupported
+}
+
+func (s *ManagerStruct) SetProperties(p0 context.Context, p1 *types.Properties) error {
+	if s.Internal.SetProperties == nil {
+		return ErrNotSupported
+	}
+	return s.Internal.SetProperties(p0, p1)
+}
+
+func (s *ManagerStub) SetProperties(p0 context.Context, p1 *types.Properties) error {
 	return ErrNotSupported
 }
 

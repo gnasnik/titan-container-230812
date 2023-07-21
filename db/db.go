@@ -35,7 +35,7 @@ func SqlDB(dsn string) (*sqlx.DB, error) {
 var createMainDBSQL embed.FS
 
 func createAllTables(ctx context.Context, mainDB *sqlx.DB) error {
-	fileNames := []string{"providers", "deployments", "services"}
+	fileNames := []string{"providers", "deployments", "services", "properties"}
 
 	for _, fileName := range fileNames {
 		content, _ := createMainDBSQL.ReadFile("sql/" + fileName + ".sql")

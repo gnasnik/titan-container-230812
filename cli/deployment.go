@@ -52,6 +52,10 @@ var CreateDeployment = &cli.Command{
 			Name:  "port",
 			Usage: "deployment internal server port",
 		},
+		&cli.BoolFlag{
+			Name:  "auth",
+			Usage: "deploy from authority",
+		},
 		&cli.StringFlag{
 			Name:  "image",
 			Usage: "deployment image",
@@ -106,6 +110,7 @@ var CreateDeployment = &cli.Command{
 		deployment := &types.Deployment{
 			ProviderID: providerID,
 			Name:       cctx.String("name"),
+			Authority:  cctx.Bool("auth"),
 			Services: []*types.Service{
 				{
 					Image: cctx.String("image"),
@@ -181,6 +186,7 @@ var DeploymentList = &cli.Command{
 			tablewriter.Col("ID"),
 			tablewriter.Col("Image"),
 			tablewriter.Col("State"),
+			tablewriter.Col("Authority"),
 			tablewriter.Col("Total"),
 			tablewriter.Col("Ready"),
 			tablewriter.Col("Available"),
@@ -220,6 +226,7 @@ var DeploymentList = &cli.Command{
 					"ID":          deployment.ID,
 					"Image":       service.Image,
 					"State":       types.DeploymentStateString(state),
+					"Authority":   deployment.Authority,
 					"Total":       service.Status.TotalReplicas,
 					"Ready":       service.Status.ReadyReplicas,
 					"Available":   service.Status.AvailableReplicas,

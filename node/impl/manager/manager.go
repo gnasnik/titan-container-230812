@@ -104,6 +104,8 @@ func (m *Manager) CreateDeployment(ctx context.Context, deployment *types.Deploy
 		return err
 	}
 
+	// TODO: authority validation
+
 	deployment.ID = types.DeploymentID(uuid.New().String())
 	deployment.State = types.DeploymentStateActive
 	deployment.CreatedAt = time.Now()
@@ -183,6 +185,17 @@ func (m *Manager) GetEvents(ctx context.Context, deployment *types.Deployment) (
 	}
 
 	return providerApi.GetEvents(ctx, deployment.ID)
+}
+
+func (m *Manager) SetProperties(ctx context.Context, properties *types.Properties) error {
+	_, err := m.ProviderManager.Get(properties.ProviderID)
+	if err != nil {
+		return err
+	}
+
+	properties.CreatedAt = time.Now()
+	properties.UpdatedAt = time.Now()
+	return m.DB.AddProperties(ctx, properties)
 }
 
 var _ api.Manager = &Manager{}

@@ -40,12 +40,13 @@ const (
 )
 
 type Deployment struct {
-	ID       DeploymentID    `db:"id"`
-	Name     string          `db:"name"`
-	Owner    string          `db:"owner"`
-	State    DeploymentState `db:"state"`
-	Version  []byte          `db:"version"`
-	Services []*Service
+	ID        DeploymentID    `db:"id"`
+	Name      string          `db:"name"`
+	Owner     string          `db:"owner"`
+	State     DeploymentState `db:"state"`
+	Version   []byte          `db:"version"`
+	Authority bool            `db:"authority"`
+	Services  []*Service
 
 	// Internal
 	Type             DeploymentType `db:"type"`
@@ -150,8 +151,19 @@ type ComputeResources struct {
 	Storage int64   `db:"storage"`
 }
 
-type OrderID string
+type AppType int
 
-type Order struct {
-	ID OrderID
+const (
+	AppTypeL1 AppType = iota + 1
+)
+
+type Properties struct {
+	ProviderID ProviderID `db:"provider_id"`
+	AppID      string     `db:"app_id"`
+	AppType    AppType    `db:"app_type"`
+
+	// internal
+	ID        int       `db:"id"`
+	CreatedAt time.Time `db:"created_at"`
+	UpdatedAt time.Time `db:"updated_at"`
 }

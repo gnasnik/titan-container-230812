@@ -5,5 +5,6 @@ CREATE TABLE IF NOT EXISTS providers(
     ip VARCHAR(128) NOT NULL,
     state INT DEFAULT 0,
     created_at DATETIME     DEFAULT NULL,
-    updated_at DATETIME     DEFAULT NULL
-    )ENGINE=InnoDB COMMENT='providers';
+    updated_at DATETIME     DEFAULT NULL,
+    PRIMARY KEY (id)
+)ENGINE=InnoDB COMMENT='providers';
