@@ -68,8 +68,7 @@ type ReplicasStatus struct {
 type Service struct {
 	Image        string         `db:"image"`
 	Name         string         `db:"name"`
-	Port         int            `db:"port"`
-	ExposePort   int            `db:"expose_port"`
+	Ports        Ports          `db:"ports"`
 	Env          Env            `db:"env"`
 	Status       ReplicasStatus `db:"status"`
 	ErrorMessage string         `db:"error_message"`
@@ -119,22 +118,28 @@ func (a Arguments) Scan(value interface{}) error {
 	return nil
 }
 
-func (s *Service) Apply(in *Service) {
-	if in.Name != "" {
-		s.Name = in.Name
+type Port struct {
+	Port       int `db:"port"`
+	ExposePort int `db:"expose_port"`
+}
+
+type Ports []Port
+
+func (a Ports) Value() (driver.Value, error) {
+	x := make([]Port, 0, len(a))
+	copy(x, a)
+	return json.Marshal(x)
+}
+
+func (a Ports) Scan(value interface{}) error {
+	b, ok := value.([]byte)
+	if !ok {
+		return errors.New("type assertion to []byte failed")
 	}
-	if in.Port > 0 {
-		s.Port = in.Port
+	if err := json.Unmarshal(b, &a); err != nil {
+		return err
 	}
-	if in.ExposePort > 0 {
-		s.ExposePort = in.ExposePort
-	}
-	if in.Status != (ReplicasStatus{}) {
-		s.Status = in.Status
-	}
-	if in.ComputeResources != (ComputeResources{}) {
-		s.ComputeResources = in.ComputeResources
-	}
+	return nil
 }
 
 type GetDeploymentOption struct {

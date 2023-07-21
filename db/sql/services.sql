@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS services(
     id INT UNSIGNED AUTO_INCREMENT,
     name VARCHAR(128) NOT NULL,
     image VARCHAR(128) NOT NULL,
-    port INT DEFAULT 0,
+    ports INT DEFAULT 0,
     expose_port INT DEFAULT 0,
     state INT DEFAULT 0,
     cpu FLOAT        DEFAULT 0,

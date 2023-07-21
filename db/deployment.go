@@ -39,8 +39,8 @@ func addNewDeployment(ctx context.Context, tx *sqlx.Tx, deployment *types.Deploy
 }
 
 func addNewServices(ctx context.Context, tx *sqlx.Tx, services []*types.Service) error {
-	qry := `INSERT INTO services (id, name, image, port, expose_port, cpu, memory, storage, deployment_id, env, arguments, error_message, created_at, updated_at) 
-		        VALUES (:id,:name, :image, :port, :expose_port, :cpu, :memory, :storage, :deployment_id, :env, :arguments, :error_message, :created_at, :updated_at)`
+	qry := `INSERT INTO services (id, name, image, ports, cpu, memory, storage, deployment_id, env, arguments, error_message, created_at, updated_at) 
+		        VALUES (:id,:name, :image, :ports, :cpu, :memory, :storage, :deployment_id, :env, :arguments, :error_message, :created_at, :updated_at)`
 	_, err := tx.NamedExecContext(ctx, qry, services)
 
 	return err
@@ -58,8 +58,7 @@ func (m *ManagerDB) GetDeployments(ctx context.Context, option *types.GetDeploym
 			s.cpu as 'service.cpu', 
 			s.memory as 'service.memory',
 			s.storage as 'service.storage', 
-			s.port as 'service.port', 
-			s.expose_port as 'service.expose_port', 
+			s.port as 'service.ports', 
 			s.env as 'service.env', 
 			s.arguments as 'service.arguments', 
 			s.error_message  as 'service.error_message',

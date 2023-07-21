@@ -12,6 +12,7 @@ import (
 	"github.com/urfave/cli/v2"
 	"os"
 	"sigs.k8s.io/yaml"
+	"strings"
 )
 
 var defaultDateTimeLayout = "2006-01-02 15:04:05"
@@ -114,7 +115,11 @@ var CreateDeployment = &cli.Command{
 			Services: []*types.Service{
 				{
 					Image: cctx.String("image"),
-					Port:  cctx.Int("port"),
+					Ports: []types.Port{
+						{
+							Port: cctx.Int("port"),
+						},
+					},
 					ComputeResources: types.ComputeResources{
 						CPU:     cctx.Float64("cpu"),
 						Memory:  cctx.Int64("mem"),
@@ -222,6 +227,11 @@ var DeploymentList = &cli.Command{
 					state = types.DeploymentStateActive
 				}
 
+				var exposePorts []string
+				for _, port := range service.Ports {
+					exposePorts = append(exposePorts, fmt.Sprintf("%d->%d", port.Port, port.ExposePort))
+				}
+
 				m := map[string]interface{}{
 					"ID":          deployment.ID,
 					"Image":       service.Image,
@@ -234,7 +244,7 @@ var DeploymentList = &cli.Command{
 					"Memory":      units.BytesSize(float64(service.Memory * units.MiB)),
 					"Storage":     units.BytesSize(float64(service.Storage * units.MiB)),
 					"Provider":    deployment.ProviderExposeIP,
-					"Port":        fmt.Sprintf("%d->%d", service.Port, service.ExposePort),
+					"Port":        strings.Join(exposePorts, " "),
 					"CreatedTime": deployment.CreatedAt.Format(defaultDateTimeLayout),
 				}
 				tw.Write(m)
