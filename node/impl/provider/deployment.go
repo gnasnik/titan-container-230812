@@ -61,7 +61,7 @@ func serviceToManifestService(service *types.Service) (manifest.Service, error) 
 	}
 	name := imageToServiceName(service.Image)
 	resource := resourceToManifestResource(&service.ComputeResources)
-	expose := exposeFromPort(service.Port)
+	exposes := exposesFromPorts(service.Ports)
 	s := manifest.Service{
 		Name:      name,
 		Image:     service.Image,
@@ -72,8 +72,8 @@ func serviceToManifestService(service *types.Service) (manifest.Service, error) 
 		Count:     podReplicas,
 	}
 
-	if expose != nil {
-		s.Expose = append(s.Expose, expose)
+	if len(exposes) > 0 {
+		s.Expose = append(s.Expose, exposes...)
 	}
 
 	return s, nil
@@ -103,11 +103,17 @@ func resourceToManifestResource(resource *types.ComputeResources) manifest.Resou
 	return *manifest.NewResourceUnits(uint64(resource.CPU*1000), uint64(resource.Memory*1000000), uint64(resource.Storage*1000000))
 }
 
-func exposeFromPort(port int) *manifest.ServiceExpose {
-	if port == 0 {
+func exposesFromPorts(ports types.Ports) []*manifest.ServiceExpose {
+	if len(ports) == 0 {
 		return nil
 	}
-	return &manifest.ServiceExpose{Port: uint32(port), ExternalPort: uint32(port), Proto: manifest.TCP, Global: true}
+
+	serviceExposes := make([]*manifest.ServiceExpose, 0, len(ports))
+	for _, port := range ports {
+		serviceExpose := &manifest.ServiceExpose{Port: uint32(port.Port), ExternalPort: uint32(port.Port), Proto: manifest.TCP, Global: true}
+		serviceExposes = append(serviceExposes, serviceExpose)
+	}
+	return serviceExposes
 }
 
 func k8sDeploymentsToServices(deploymentList *appsv1.DeploymentList) ([]*types.Service, error) {
@@ -134,9 +140,6 @@ func k8sDeploymentToService(deployment *appsv1.Deployment) (*types.Service, erro
 	service.CPU = container.Resources.Limits.Cpu().AsApproximateFloat64()
 	service.Memory = container.Resources.Limits.Memory().Value() / 1000000
 	service.Storage = int64(container.Resources.Limits.StorageEphemeral().AsApproximateFloat64()) / 1000000
-	if len(container.Ports) > 0 {
-		service.Port = int(container.Ports[0].ContainerPort)
-	}
 
 	status := types.ReplicasStatus{
 		TotalReplicas:     int(deployment.Status.Replicas),
@@ -148,19 +151,25 @@ func k8sDeploymentToService(deployment *appsv1.Deployment) (*types.Service, erro
 	return service, nil
 }
 
-func k8sServiceToPortMap(serviceList *corev1.ServiceList) (map[string]int, error) {
-	portMap := make(map[string]int)
+func k8sServiceToPortMap(serviceList *corev1.ServiceList) (map[string]types.Ports, error) {
+	portMap := make(map[string]types.Ports)
 	for _, service := range serviceList.Items {
-		if len(service.Spec.Ports) > 0 {
-			servicePort := service.Spec.Ports[0]
-			if servicePort.NodePort != 0 {
-				serviceName := strings.TrimSuffix(service.Name, builder.SuffixForNodePortServiceName)
-				portMap[serviceName] = int(servicePort.NodePort)
-			} else {
-				portMap[service.Name] = int(servicePort.Port)
-			}
-		}
+		serviceName := strings.TrimSuffix(service.Name, builder.SuffixForNodePortServiceName)
 
+		ports := servicePortsToPortPairs(service.Spec.Ports)
+		portMap[serviceName] = ports
 	}
 	return portMap, nil
+}
+
+func servicePortsToPortPairs(servicePorts []corev1.ServicePort) types.Ports {
+	ports := make([]types.Port, 0, len(servicePorts))
+	for _, servicePort := range servicePorts {
+		port := types.Port{Port: int(servicePort.Port)}
+		if servicePort.NodePort != 0 {
+			port.ExposePort = int(servicePort.NodePort)
+		}
+		ports = append(ports, port)
+	}
+	return types.Ports(ports)
 }

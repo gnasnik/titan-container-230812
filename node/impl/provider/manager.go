@@ -162,8 +162,8 @@ func (m *manager) GetDeployment(ctx context.Context, id types.DeploymentID) (*ty
 
 	for i := range services {
 		name := services[i].Name
-		if port, ok := portMap[name]; ok {
-			services[i].ExposePort = port
+		if ports, ok := portMap[name]; ok {
+			services[i].Ports = ports
 		}
 	}
 

@@ -19,7 +19,8 @@ func TestCreateDeploy(t *testing.T) {
 	manager, err := NewManager(config)
 	require.NoError(t, err)
 
-	service := types.Service{Image: "test", Port: 6379, ComputeResources: types.ComputeResources{CPU: 0.1, Memory: 100, Storage: 100}}
+	port := types.Port{Port: 6379}
+	service := types.Service{Image: "test", Ports: []types.Port{port}, ComputeResources: types.ComputeResources{CPU: 0.1, Memory: 100, Storage: 100}}
 	deploy := types.Deployment{
 		ID:       types.DeploymentID("2222"),
 		Owner:    "test",
@@ -35,7 +36,9 @@ func TestUplodateDeploy(t *testing.T) {
 	manager, err := NewManager(config)
 	require.NoError(t, err)
 
-	service := types.Service{Image: "test", Port: 6379, ComputeResources: types.ComputeResources{CPU: 0.1, Memory: 100, Storage: 100}}
+	port := types.Port{Port: 6379}
+	ports := types.Ports([]types.Port{port})
+	service := types.Service{Image: "test", Ports: ports, ComputeResources: types.ComputeResources{CPU: 0.1, Memory: 100, Storage: 100}}
 	deploy := types.Deployment{
 		ID:       types.DeploymentID("ccc"),
 		Owner:    "test",
