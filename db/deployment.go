@@ -58,7 +58,7 @@ func (m *ManagerDB) GetDeployments(ctx context.Context, option *types.GetDeploym
 			s.cpu as 'service.cpu', 
 			s.memory as 'service.memory',
 			s.storage as 'service.storage', 
-			s.port as 'service.ports', 
+			s.ports as 'service.ports', 
 			s.env as 'service.env', 
 			s.arguments as 'service.arguments', 
 			s.error_message  as 'service.error_message',
