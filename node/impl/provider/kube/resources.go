@@ -16,9 +16,9 @@ func (c *client) FetchNodeResources(ctx context.Context) (map[string]*nodeResour
 		return nil, err
 	}
 
-	podListOptions := metav1.ListOptions{
-		FieldSelector: "status.phase==Running",
-	}
+	// podListOptions := metav1.ListOptions{
+	// 	FieldSelector: "status.phase==Running",
+	// }
 	podsClient := c.kc.CoreV1().Pods(metav1.NamespaceAll)
 	podsPager := pager.New(func(ctx context.Context, opts metav1.ListOptions) (runtime.Object, error) {
 		return podsClient.List(ctx, opts)
@@ -34,7 +34,7 @@ func (c *client) FetchNodeResources(ctx context.Context) (map[string]*nodeResour
 	}
 
 	// Go over each pod and sum the resources for it into the value for the pod it lives on
-	err = podsPager.EachListItem(ctx, podListOptions, func(obj runtime.Object) error {
+	err = podsPager.EachListItem(ctx, metav1.ListOptions{}, func(obj runtime.Object) error {
 		pod := obj.(*corev1.Pod)
 		nodeName := pod.Spec.NodeName
 
