@@ -127,7 +127,9 @@ type Ports []Port
 
 func (a Ports) Value() (driver.Value, error) {
 	x := make([]Port, 0, len(a))
-	copy(x, a)
+	for _, i := range a {
+		x = append(x, i)
+	}
 	return json.Marshal(x)
 }
 
