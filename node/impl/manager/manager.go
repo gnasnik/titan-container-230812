@@ -43,6 +43,11 @@ func (m *Manager) GetStatistics(ctx context.Context, id types.ProviderID) (*type
 func (m *Manager) ProviderConnect(ctx context.Context, url string, provider *types.Provider) error {
 	remoteAddr := handler.GetRemoteAddr(ctx)
 
+	_, err := m.ProviderManager.Get(provider.ID)
+	if err != ErrProviderNotExist {
+		return nil
+	}
+
 	p, err := connectRemoteProvider(ctx, m, url)
 	if err != nil {
 		return errors.Errorf("connecting remote provider failed: %v", err)
