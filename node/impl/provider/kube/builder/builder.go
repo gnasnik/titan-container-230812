@@ -102,7 +102,7 @@ func DidNS(did manifest.DeploymentID) string {
 }
 
 func shouldBeIngress(expose *manifest.ServiceExpose) bool {
-	return expose.Proto == manifest.TCP && expose.Global && 80 == exposeExternalPort(expose)
+	return expose.Proto == manifest.TCP && expose.Global && exposeExternalPort(expose) == 80
 }
 
 func exposeExternalPort(expose *manifest.ServiceExpose) int32 {

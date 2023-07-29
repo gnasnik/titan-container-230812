@@ -118,9 +118,17 @@ func (a Arguments) Scan(value interface{}) error {
 	return nil
 }
 
+type Protocol string
+
+const (
+	TCP = Protocol("TCP")
+	UDP = Protocol("UDP")
+)
+
 type Port struct {
-	Port       int `db:"port"`
-	ExposePort int `db:"expose_port"`
+	Protocol   Protocol `db:"protocol"`
+	Port       int      `db:"port"`
+	ExposePort int      `db:"expose_port"`
 }
 
 type Ports []Port

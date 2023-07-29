@@ -3,7 +3,6 @@ package builder
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"math"
 	"strings"
 
@@ -145,9 +144,9 @@ func (b *Workload) container() corev1.Container {
 
 	buf, err := json.Marshal(kcontainer)
 	if err != nil {
-		log.Fatalf("Marshal err %s", err.Error())
+		fmt.Printf("Marshal err %s", err.Error())
 	}
-	log.Printf("deployment %#v", string(buf))
+	fmt.Printf("deployment %#v", string(buf))
 
 	return kcontainer
 }

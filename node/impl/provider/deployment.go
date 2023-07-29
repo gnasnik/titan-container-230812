@@ -45,7 +45,7 @@ func deploymentToManifestGroup(deployment *types.Deployment) (*manifest.Group, e
 
 	services := make([]manifest.Service, 0, len(deployment.Services))
 	for _, service := range deployment.Services {
-		s, err := serviceToManifestService(service)
+		s, err := serviceToManifestService(service, deployment.Authority)
 		if err != nil {
 			return nil, err
 		}
@@ -55,13 +55,17 @@ func deploymentToManifestGroup(deployment *types.Deployment) (*manifest.Group, e
 	return &manifest.Group{Services: services}, nil
 }
 
-func serviceToManifestService(service *types.Service) (manifest.Service, error) {
+func serviceToManifestService(service *types.Service, Authority bool) (manifest.Service, error) {
 	if len(service.Image) == 0 {
 		return manifest.Service{}, fmt.Errorf("service image can not empty")
 	}
 	name := imageToServiceName(service.Image)
 	resource := resourceToManifestResource(&service.ComputeResources)
-	exposes := exposesFromPorts(service.Ports)
+	exposes, err := exposesFromPorts(service.Ports)
+	if err != nil {
+		return manifest.Service{}, err
+	}
+
 	s := manifest.Service{
 		Name:      name,
 		Image:     service.Image,
@@ -103,17 +107,34 @@ func resourceToManifestResource(resource *types.ComputeResources) manifest.Resou
 	return *manifest.NewResourceUnits(uint64(resource.CPU*1000), uint64(resource.Memory*1000000), uint64(resource.Storage*1000000))
 }
 
-func exposesFromPorts(ports types.Ports) []*manifest.ServiceExpose {
+func serviceProto(protocol types.Protocol) (manifest.ServiceProtocol, error) {
+	if len(protocol) == 0 {
+		return manifest.TCP, nil
+	}
+
+	proto := strings.ToUpper(string(protocol))
+	serviceProto := manifest.ServiceProtocol(proto)
+	if serviceProto != manifest.TCP && serviceProto != manifest.UDP {
+		return "", fmt.Errorf("it's neither tcp nor udp")
+	}
+	return serviceProto, nil
+}
+
+func exposesFromPorts(ports types.Ports) ([]*manifest.ServiceExpose, error) {
 	if len(ports) == 0 {
-		return nil
+		return nil, nil
 	}
 
 	serviceExposes := make([]*manifest.ServiceExpose, 0, len(ports))
 	for _, port := range ports {
-		serviceExpose := &manifest.ServiceExpose{Port: uint32(port.Port), ExternalPort: uint32(port.Port), Proto: manifest.TCP, Global: true}
+		proto, err := serviceProto(port.Protocol)
+		if err != nil {
+			return nil, err
+		}
+		serviceExpose := &manifest.ServiceExpose{Port: uint32(port.Port), ExternalPort: uint32(port.Port), Proto: proto, Global: true}
 		serviceExposes = append(serviceExposes, serviceExpose)
 	}
-	return serviceExposes
+	return serviceExposes, nil
 }
 
 func k8sDeploymentsToServices(deploymentList *appsv1.DeploymentList) ([]*types.Service, error) {
@@ -165,7 +186,7 @@ func k8sServiceToPortMap(serviceList *corev1.ServiceList) (map[string]types.Port
 func servicePortsToPortPairs(servicePorts []corev1.ServicePort) types.Ports {
 	ports := make([]types.Port, 0, len(servicePorts))
 	for _, servicePort := range servicePorts {
-		port := types.Port{Port: int(servicePort.Port)}
+		port := types.Port{Port: int(servicePort.TargetPort.IntVal), Protocol: types.Protocol(servicePort.Protocol)}
 		if servicePort.NodePort != 0 {
 			port.ExposePort = int(servicePort.NodePort)
 		}

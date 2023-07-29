@@ -134,7 +134,7 @@ func (b *service) ports() ([]corev1.ServicePort, error) {
 	service := &b.deployment.ManifestGroup().Services[b.serviceIdx]
 
 	ports := make([]corev1.ServicePort, 0, len(service.Expose))
-	portsAdded := make(map[int32]struct{})
+	portsAdded := make(map[string]struct{})
 	for i, expose := range service.Expose {
 		shouldBeIngress := shouldBeIngress(expose)
 		if expose.Global == b.requireNodePort || (!b.requireNodePort && shouldBeIngress) {
@@ -152,9 +152,10 @@ func (b *service) ports() ([]corev1.ServicePort, error) {
 				return nil, errUnsupportedProtocol
 			}
 			externalPort := exposeExternalPort(service.Expose[i])
-			_, added := portsAdded[externalPort]
+			key := fmt.Sprintf("%d:%s", externalPort, exposeProtocol)
+			_, added := portsAdded[key]
 			if !added {
-				portsAdded[externalPort] = struct{}{}
+				portsAdded[key] = struct{}{}
 				ports = append(ports, corev1.ServicePort{
 					Name:       fmt.Sprintf("%d-%d", i, int(externalPort)),
 					Port:       externalPort,
